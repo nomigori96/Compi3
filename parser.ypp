@@ -3,7 +3,7 @@
 #include <iostream>
 #include "hw3_output.hpp"
 #include "Semantic_types.hpp"
-
+#include <string>
 using namespace std;
 using namespace output;
 
@@ -13,41 +13,71 @@ int yylex();
 void yyerror(const char*);
 
 %}
-%token B
-%token ID
-%token LPAREN
-%nonassoc RPAREN
-%token LBRACE
-%token RBRACE
-%token ENUM
-%token SC
-%token VOID
-%token COMMA
-%token RETURN
-%token BREAK
-%token IF
-%token CONTINUE
-%nonassoc ELSE
-%token WHILE
-%token INT
-%token BYTE
-%token BOOL
-%token NUM
-%token STRING
-%token TRUE
-%token FALSE
-%right ASSIGN
-%left OR
-%left AND
-%left EQUALITY
-%nonassoc RELATIONAL
-%left ADDITIVE
-%left MUL
-%right CAST
-%right NOT
-%left PARENS
 
+%union {
+    char character;
+    int numeric;
+    string str;
+    exp_t exp;
+    type_t type;
+    enumType_t enumType;
+    call_t call;
+    expList_t expList;
+    dummy_t dummy;
+}
 
+%token <character> B
+%token <str> ID
+%token <character> LPAREN
+%nonassoc <character> RPAREN
+%token <character> LBRACE
+%token <character> RBRACE
+%token <str> ENUM
+%token <character> SC
+%token <str> VOID
+%token <character> COMMA
+%token <str> RETURN
+%token <str> BREAK
+%token <str> IF
+%token <str> CONTINUE
+%nonassoc <str> ELSE
+%token <str> WHILE
+%token <str> INT
+%token <str> BYTE
+%token <str> BOOL
+%token <numeric> NUM
+%token <str> STRING
+%token <str> TRUE
+%token <str> FALSE
+%right <character> ASSIGN
+%left <character> OR
+%left <character> AND
+%left <character> EQUALITY
+%nonassoc <character> RELATIONAL
+%left <character> ADDITIVE
+%left <character> MUL
+%right <dummy> CAST
+%right <str> NOT
+%left <dummy> PARENS
+
+%type <dummy> Program
+%type <dummy> Funcs
+%type <dummy> FuncDecl
+%type <dummy> Enums
+%type <dummy> EnumDecl
+%type <dummy> RetType
+%type <dummy> Formals
+%type <dummy> FormalsList
+%type <dummy> FormalsDecl
+%type <dummy> EnumeratorList
+%type <dummy> Enumerator
+%type <dummy> Statements
+%type <dummy> Statement
+%type <call> Call
+%type <expList> ExpList
+%type <type> Type
+%type <enumType> EnumType
+%type <exp> Exp
 
 %%
 
