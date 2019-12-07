@@ -81,65 +81,68 @@ void yyerror(const char*);
 
 %%
 
-Program:        Enums Funcs {};
-Funcs:          {} |
-                FuncDecl Funcs {};
-FuncDecl:       RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE {};
-Enums:          {}|
-                EnumDecl Enums {};
-EnumDecl:       ENUM ID LBRACE EnumeratorList RBRACE SC {};
-RetType:        Type {}|
-                VOID {};
-Formals:        {}|
-                FormalsList {};
-FormalsList:    FormalDecl {}|
-                FormalDecl COMMA FormalsList {};
-FormalDecl:     Type ID {}|
-                EnumType ID {};
-EnumeratorList: Enumerator {}|
-                EnumeratorList COMMA Enumerator {};
-Enumerator:     ID {};
-Statements:     Statement {}|
-                Statements Statement {};
-Statement:      LBRACE Statements RBRACE {}|
-                Type ID SC {}|
-                EnumType ID SC {}|
-                EnumDecl {}|
-                Type ID ASSIGN Exp SC {}|
-                EnumType ID ASSIGN Exp SC {}|
-                ID ASSIGN Exp SC {}|
-                Call SC {}|
-                RETURN SC {}|
-                RETURN Exp SC {}|
-                IF LPAREN Exp RPAREN Statement {}|
-                IF LPAREN Exp RPAREN Statement ELSE Statement {}|
-                WHILE LPAREN Exp RPAREN Statement {}|
-                BREAK SC {}|
-                CONTINUE SC {};
-Call:           ID LPAREN ExpList RPAREN {}|
-                ID LPAREN RPAREN {};
-ExpList:        Exp {}|
-                Exp COMMA ExpList {};
-Type:           INT {}|
-                BYTE {}|
-                BOOL {};
-EnumType:       ENUM ID {};
-Exp:            LPAREN Exp RPAREN %prec PARENS {}|
-                Exp ADDITIVE Exp {}|
-                Exp MUL Exp {}|
-                ID {}|
-                Call {}|
-                NUM {}|
-                NUM B {}|
-                STRING {}|
-	            TRUE {}|
-	            FALSE {}|
-	            NOT Exp {}|
-	            Exp AND Exp {}|
-	            Exp OR Exp {}|
-	            Exp RELATIONAL Exp {}|
-	            Exp EQUALITY Exp {}|
-	            LPAREN Type RPAREN Exp %prec CAST {};
+Program:            CreateSymbolTable Enums Funcs {};
+CreateSymbolTable:  {};
+Funcs:              {} |
+                    FuncDecl Funcs {};
+FuncDecl:           RetType ID LPAREN Formals RPAREN LBRACE OpenScope Statements RBRACE CloseScope {};
+OpenScope:          {};
+CloseScope:         {};
+Enums:              {}|
+                    EnumDecl Enums {};
+EnumDecl:           ENUM ID LBRACE EnumeratorList RBRACE SC {};
+RetType:            Type {}|
+                    VOID {};
+Formals:            {}|
+                    FormalsList {};
+FormalsList:        FormalDecl {}|
+                    FormalDecl COMMA FormalsList {};
+FormalDecl:         Type ID {}|
+                    EnumType ID {};
+EnumeratorList:     Enumerator {}|
+                    EnumeratorList COMMA Enumerator {};
+Enumerator:         ID {};
+Statements:         Statement {}|
+                    Statements Statement {};
+Statement:          LBRACE OpenScope Statements RBRACE CloseScope {}|
+                    Type ID SC {}|
+                    EnumType ID SC {}|
+                    EnumDecl {}|
+                    Type ID ASSIGN Exp SC {}|
+                    EnumType ID ASSIGN Exp SC {}|
+                    ID ASSIGN Exp SC {}|
+                    Call SC {}|
+                    RETURN SC {}|
+                    RETURN Exp SC {}|
+                    IF LPAREN Exp RPAREN  OpenScope Statement CloseScope {}|
+                    IF LPAREN Exp RPAREN OpenScope Statement CloseScope ELSE OpenScope Statement CloseScope {}|
+                    WHILE LPAREN Exp RPAREN OpenScope Statement CloseScope {}|
+                    BREAK SC {}|
+                    CONTINUE SC {};
+Call:               ID LPAREN ExpList RPAREN {}|
+                    ID LPAREN RPAREN {};
+ExpList:            Exp {}|
+                    Exp COMMA ExpList {};
+Type:               INT {}|
+                    BYTE {}|
+                    BOOL {};
+EnumType:           ENUM ID {};
+Exp:                LPAREN Exp RPAREN %prec PARENS {}|
+                    Exp ADDITIVE Exp {}|
+                    Exp MUL Exp {}|
+                    ID {}|
+                    Call {}|
+                    NUM {}|
+                    NUM B {}|
+                    STRING {}|
+                    TRUE {}|
+                    FALSE {}|
+                    NOT Exp {}|
+                    Exp AND Exp {}|
+                    Exp OR Exp {}|
+                    Exp RELATIONAL Exp {}|
+                    Exp EQUALITY Exp {}|
+                    LPAREN Type RPAREN Exp %prec CAST {};
 
 %%
 
