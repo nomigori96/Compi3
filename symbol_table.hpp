@@ -49,11 +49,11 @@ public:
                         vector<string> enum_values);
     void open_scope();
     void close_current_scope();
+    string get_current_function_return_type();
     symbolTableRecord get_symbol_record_by_id(string id);
     bool does_symbol_exists(string id);
     SymbolTable();
     ~SymbolTable();
-
 };
 
 #endif //HW3_SYMBOL_TABLE_HPP

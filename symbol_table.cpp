@@ -91,3 +91,12 @@ SymbolTable::~SymbolTable(){
     delete symbol_table;
 }
 
+string SymbolTable::get_current_function_return_type(){
+    vector<symbolTableRecord> current_scope;
+    current_scope = symbol_table->top();
+    symbol_table->pop();
+    string return_type = (symbol_table->top()).back().get_func_ret_value_type();
+    symbol_table->push(current_scope);
+    return return_type;
+}
+

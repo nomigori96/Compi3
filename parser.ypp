@@ -85,7 +85,8 @@ Program:            CreateSymbolTable Enums Funcs {};
 CreateSymbolTable:  {};
 Funcs:              {} |
                     FuncDecl Funcs {};
-FuncDecl:           RetType ID LPAREN Formals RPAREN LBRACE OpenScope Statements RBRACE CloseScope {};
+FuncDecl:           RetType ID LPAREN Formals RPAREN LBRACE OpenScopeAddSymbol Statements RBRACE CloseScope {};
+OpenScopeAddSymbol: {};
 OpenScope:          {};
 CloseScope:         {};
 Enums:              {}|
