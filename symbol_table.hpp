@@ -43,10 +43,16 @@ private:
     stack<int>* offsets_stack;
 
 public:
-    void insert_symbol(string symbol_name, string type,
-                       vector<string> func_argument_types,
-                       string func_return_value_type,
-                        vector<string> enum_values);
+    void insert_symbol(
+            string symbol_name,
+            string type,
+            vector<string> func_argument_types,
+            string func_return_value_type,
+            vector<string> enum_values);
+    void insert_function_arg_symbol(
+            string symbol_name,
+            string type,
+            int offset);
     void open_scope();
     void close_current_scope();
     string get_current_function_return_type();

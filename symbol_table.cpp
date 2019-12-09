@@ -10,11 +10,20 @@ symbolTableRecord::symbolTableRecord(const symbolTableRecord &to_copy){
 }
 
 
-void SymbolTable::insert_symbol(string symbol_name, string type,
-                   vector<string> func_argument_types,
-                   string func_return_value_type,
-                   vector<string> enum_values){
-    symbol_table->top().push_back(symbolTableRecord(symbol_name, offsets_stack->top(), type, func_argument_types, func_return_value_type, enum_values));
+void SymbolTable::insert_symbol(
+        string symbol_name,
+        string type,
+        vector<string> func_argument_types,
+        string func_return_value_type,
+        vector<string> enum_values)
+{
+    symbol_table->top().push_back(symbolTableRecord(
+            symbol_name,
+            offsets_stack->top(),
+            type,
+            func_argument_types,
+            func_return_value_type,
+            enum_values));
     int previous_offset = offsets_stack->top();
     offsets_stack->pop();
     offsets_stack->push(previous_offset + 1);
@@ -98,5 +107,19 @@ string SymbolTable::get_current_function_return_type(){
     string return_type = (symbol_table->top()).back().get_func_ret_value_type();
     symbol_table->push(current_scope);
     return return_type;
+}
+
+void SymbolTable::insert_function_arg_symbol(
+        string symbol_name,
+        string type,
+        int offset)
+{
+    symbol_table->top().push_back(symbolTableRecord(
+            symbol_name,
+            offset,
+            type,
+            nullptr,
+            nullptr,
+            nullptr));
 }
 

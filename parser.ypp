@@ -3,14 +3,15 @@
 #include <iostream>
 #include "hw3_output.hpp"
 #include "Semantic_types.hpp"
+#include "ParserFunctions.hpp"
 #include <string>
 using namespace std;
-using namespace output;
 
 extern int yylineno;
 
 int yylex();
 void yyerror(const char*);
+
 
 %}
 
@@ -24,6 +25,10 @@ void yyerror(const char*);
     call_t call;
     expList_t expList;
     dummy_t dummy;
+    formals_t formals;
+    formalList_t formalsList;
+    formalDecl_t formalsDecl;
+    retType_t retType;
 }
 
 %token <character> B
@@ -65,10 +70,10 @@ void yyerror(const char*);
 %type <dummy> FuncDecl
 %type <dummy> Enums
 %type <dummy> EnumDecl
-%type <dummy> RetType
-%type <dummy> Formals
-%type <dummy> FormalsList
-%type <dummy> FormalsDecl
+%type <retType> RetType
+%type <formals> Formals
+%type <formalsList> FormalsList
+%type <formalsDecl> FormalsDecl
 %type <dummy> EnumeratorList
 %type <dummy> Enumerator
 %type <dummy> Statements
@@ -81,24 +86,54 @@ void yyerror(const char*);
 
 %%
 
-Program:            CreateSymbolTable Enums Funcs {};
-CreateSymbolTable:  {};
+Program:            Enums Funcs {program_enum_funcs()};
 Funcs:              {} |
                     FuncDecl Funcs {};
-FuncDecl:           RetType ID LPAREN Formals RPAREN LBRACE OpenScopeAddSymbol Statements RBRACE CloseScope {};
-OpenScopeAddSymbol: {};
-OpenScope:          {};
-CloseScope:         {};
+FuncDecl:           FuncDeclHeader Statements RBRACE {
+    CloseCurrentScope();
+};
+FuncDeclHeader:     RetType ID LPAREN Formals RPAREN LBRACE {
+    AddFunctionSymbolIfNotExists($2, "function" , $4.args, $1.type);
+    OpenNewScope();
+    AddFuncArgsToSymbolTable(*$4.args);
+    delete $4.args;
+    delete $1.type;
+};
+OpenScope:          {
+    OpenNewScope();
+};
+CloseScope: {
+    CloseCurrentScope();
+};
 Enums:              {}|
                     EnumDecl Enums {};
 EnumDecl:           ENUM ID LBRACE EnumeratorList RBRACE SC {};
-RetType:            Type {}|
-                    VOID {};
-Formals:            {}|
-                    FormalsList {};
-FormalsList:        FormalDecl {}|
-                    FormalDecl COMMA FormalsList {};
-FormalDecl:         Type ID {}|
+RetType:            Type {$$.type = $1.type;}|
+                    VOID {$$.type = new string("void");};
+Formals:            {
+    $$.args = new vector<pair<string, string>>();
+}|
+                    FormalsList {
+    $$.args = $1.args;
+};
+FormalsList:        FormalDecl {
+    $$.args = new vector<pair<string,string>>();
+    pair<string,string>* argToAdd(*($1.type), *($1,argName));
+    $$.args.push_back(argToAdd);
+    delete $1.type;
+    delete $1.argName;
+}|
+                    FormalDecl COMMA FormalsList {
+    $$.args = $3.args;
+    pair<string,string>* argToAdd(*($1.type), *($1.argName));
+    $$.args.insert(*($$.args).begin(), argToAdd);
+    delete $1.type;
+    delete $1.argName;
+};
+FormalDecl:         Type ID {
+    $$.type = $1.type;
+    $$.argName = new string($2);
+}|
                     EnumType ID {};
 EnumeratorList:     Enumerator {}|
                     EnumeratorList COMMA Enumerator {};
@@ -124,9 +159,9 @@ Call:               ID LPAREN ExpList RPAREN {}|
                     ID LPAREN RPAREN {};
 ExpList:            Exp {}|
                     Exp COMMA ExpList {};
-Type:               INT {}|
-                    BYTE {}|
-                    BOOL {};
+Type:               INT {$$.type = new string("int");}|
+                    BYTE {$$.type = new string("byte");}|
+                    BOOL {$$.type = new string("bool");};
 EnumType:           ENUM ID {};
 Exp:                LPAREN Exp RPAREN %prec PARENS {}|
                     Exp ADDITIVE Exp {}|
