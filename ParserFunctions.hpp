@@ -1,19 +1,13 @@
-//
-// Created by owner on 09/12/2019.
-//
 
 #ifndef HW3_PARSERFUNCTIONS_HPP
 #define HW3_PARSERFUNCTIONS_HPP
 
-#include "symbol_table.hpp"
-#include "hw3_output.hpp"
+#include <string>
+#include <vector>
 
-using namespace output;
 using namespace std;
 
-SymbolTable symbol_table;
-
-void program_enum_funcs();
+void CheckMainExists();
 void AddFunctionSymbolIfNotExists(
         string symbol_name,
         string type,

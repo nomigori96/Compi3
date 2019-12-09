@@ -1,10 +1,9 @@
 %{
-#include <stdio.h>
-#include <iostream>
 #include "hw3_output.hpp"
 #include "Semantic_types.hpp"
 #include "ParserFunctions.hpp"
 #include <string>
+
 using namespace std;
 
 extern int yylineno;
@@ -86,54 +85,56 @@ void yyerror(const char*);
 
 %%
 
-Program:            Enums Funcs {program_enum_funcs()};
+Program:            Enums Funcs {
+                        CheckMainExists()
+                    };
 Funcs:              {} |
                     FuncDecl Funcs {};
 FuncDecl:           FuncDeclHeader Statements RBRACE {
-    CloseCurrentScope();
-};
+                        CloseCurrentScope();
+                    };
 FuncDeclHeader:     RetType ID LPAREN Formals RPAREN LBRACE {
-    AddFunctionSymbolIfNotExists($2, "function" , $4.args, $1.type);
-    OpenNewScope();
-    AddFuncArgsToSymbolTable(*$4.args);
-    delete $4.args;
-    delete $1.type;
-};
+                        AddFunctionSymbolIfNotExists($2, "function" , $4.args, $1.type);
+                        OpenNewScope();
+                        AddFuncArgsToSymbolTable(*$4.args);
+                        delete $4.args;
+                        delete $1.type;
+                    };
 OpenScope:          {
-    OpenNewScope();
-};
-CloseScope: {
-    CloseCurrentScope();
-};
+                        OpenNewScope();
+                    };
+CloseScope:         {
+                        CloseCurrentScope();
+                    };
 Enums:              {}|
                     EnumDecl Enums {};
 EnumDecl:           ENUM ID LBRACE EnumeratorList RBRACE SC {};
 RetType:            Type {$$.type = $1.type;}|
                     VOID {$$.type = new string("void");};
 Formals:            {
-    $$.args = new vector<pair<string, string>>();
-}|
+                        $$.args = new vector<pair<string, string>>();
+                    }|
                     FormalsList {
-    $$.args = $1.args;
-};
+                        $$.args = $1.args;
+                    };
 FormalsList:        FormalDecl {
-    $$.args = new vector<pair<string,string>>();
-    pair<string,string>* argToAdd(*($1.type), *($1,argName));
-    $$.args.push_back(argToAdd);
-    delete $1.type;
-    delete $1.argName;
-}|
+                        $$.args = new vector<pair<string,string>>();
+                        pair<string,string>* argToAdd(*($1.type), *($1,argName));
+                        $$.args.push_back(argToAdd);
+                        delete $1.type;
+                        delete $1.argName;
+                    }|
                     FormalDecl COMMA FormalsList {
-    $$.args = $3.args;
-    pair<string,string>* argToAdd(*($1.type), *($1.argName));
-    $$.args.insert(*($$.args).begin(), argToAdd);
-    delete $1.type;
-    delete $1.argName;
-};
+                        $$.args = $3.args;
+                        pair<string,string>* argToAdd(*($1.type), *($1.argName));
+                        $$.args.insert(*($$.args).begin(), argToAdd);
+                        delete $1.type;
+                        delete $1.argName;
+                    };
 FormalDecl:         Type ID {
-    $$.type = $1.type;
-    $$.argName = new string($2);
-}|
+                        $$.type = $1.type;
+                        $$.argName = new string($2);
+                    }|
                     EnumType ID {};
 EnumeratorList:     Enumerator {}|
                     EnumeratorList COMMA Enumerator {};
@@ -150,9 +151,13 @@ Statement:          LBRACE OpenScope Statements RBRACE CloseScope {}|
                     Call SC {}|
                     RETURN SC {}|
                     RETURN Exp SC {}|
-                    IF LPAREN Exp RPAREN  OpenScope Statement CloseScope {}|
+                    IF LPAREN Exp RPAREN  OpenScope Statement {
+                        CloseCurrentScope();
+                    }|
                     IF LPAREN Exp RPAREN OpenScope Statement CloseScope ELSE OpenScope Statement CloseScope {}|
-                    WHILE LPAREN Exp RPAREN OpenScope Statement CloseScope {}|
+                    WHILE LPAREN Exp RPAREN OpenScope Statement {
+                        CloseCurrentScope();
+                    }|
                     BREAK SC {}|
                     CONTINUE SC {};
 Call:               ID LPAREN ExpList RPAREN {}|
