@@ -15,6 +15,6 @@ void AddFunctionSymbolIfNotExists(
         string ret_type);
 void OpenNewScope();
 void CloseCurrentScope();
-void AddFuncArgsToSymbolTable(vector<pair<string,string>> args);
+void AddFuncArgsToSymbolTable(vector<pair<string,string>>& args);
 
 #endif //HW3_PARSERFUNCTIONS_HPP

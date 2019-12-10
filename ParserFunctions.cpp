@@ -24,17 +24,16 @@ void CheckMainExists()
 
 
 void AddFunctionSymbolIfNotExists(
-        string symbol_name,
-        string type,
-        vector<pair<string,string>> args_types,
-        string ret_type)
+        const string& symbol_name,
+        const string& type,
+        const vector<pair<string,string>>& args_types,
+        const string& ret_type)
 {
     if (symbol_table.DoesSymbolExists(symbol_name)){
         //error
     }
     else {
-        symbol_table.InsertSymbol(symbol_name, type, args_types, ret_type,
-                                   nullptr);
+        symbol_table.InsertSymbol(symbol_name, type, args_types, ret_type, vector<string>());
     }
 }
 
@@ -48,7 +47,7 @@ void CloseCurrentScope()
     symbol_table.CloseCurrentScope();
 }
 
-void AddFuncArgsToSymbolTable(vector<pair<string,string>> args)
+void AddFuncArgsToSymbolTable(vector<pair<string,string>>& args)
 {
     int counter = -1;
     for (auto &arg : args) {

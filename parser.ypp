@@ -94,9 +94,9 @@ FuncDecl:           FuncDeclHeader Statements RBRACE {
                         CloseCurrentScope();
                     };
 FuncDeclHeader:     RetType ID LPAREN Formals RPAREN LBRACE {
-                        AddFunctionSymbolIfNotExists($2, "function" , $4.args, $1.type);
+                        AddFunctionSymbolIfNotExists($2, "function" , *($4.args), *($1.type));
                         OpenNewScope();
-                        AddFuncArgsToSymbolTable(*$4.args);
+                        AddFuncArgsToSymbolTable(*($4.args));
                         delete $4.args;
                         delete $1.type;
                     };
