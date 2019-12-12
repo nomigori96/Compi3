@@ -1,16 +1,20 @@
 #include "symbol_table.hpp"
 
-SymbolTableRecord::SymbolTableRecord(const SymbolTableRecord &to_copy){
+FunctionSymbolTableRecord& FunctionSymbolTableRecord::operator=(const FunctionSymbolTableRecord &to_copy){
+    func_arguments = to_copy.func_arguments;
+    func_ret_type = to_copy.func_ret_type;
+    type = to_copy.type;
     name = to_copy.name;
     offset = to_copy.offset;
-    type = to_copy.type;
     is_enum_type = to_copy.is_enum_type;
+    return *this;
 }
 
-virtual SymbolTableRecord& operator=(const SymbolTableRecord &to_copy){
+EnumSymbolTableRecord& EnumSymbolTableRecord::operator=(const EnumSymbolTableRecord &to_copy){
+    enum_values = to_copy.enum_values;
+    type = to_copy.type;
     name = to_copy.name;
     offset = to_copy.offset;
-    type = to_copy.type;
     is_enum_type = to_copy.is_enum_type;
     return *this;
 }
@@ -35,9 +39,7 @@ void SymbolTable::InsertSymbol(
                 offsets_stack->top(),
                 type,
                 is_enum_type));
-    int previous_offset = offsets_stack->top();
-    offsets_stack->pop();
-    offsets_stack->push(previous_offset + 1);
+    offsets_stack->top()++;
 }
 
 void SymbolTable::InsertFunction(
@@ -58,29 +60,33 @@ void SymbolTable::InsertEnum(
         const vector<string>& enum_values)
 {
     symbol_table->top().push_back(
-            new EnumSymbolTableRecord(
-                    symbol_name,
-                    offsets_stack->top(),
-                    enum_values));
-    int previous_offset = offsets_stack->top();
-    offsets_stack->pop();
-    offsets_stack->push(previous_offset + 1);
+            new EnumSymbolTableRecord(symbol_name, 0, enum_values));
 }
 
 void SymbolTable::OpenScope()
 {
     vector<SymbolTableRecord*> new_scope;
     symbol_table->push(new_scope);
+    int curr_offset = offsets_stack->top();
+    offsets_stack->push(curr_offset);
 }
 
 void SymbolTable::CloseCurrentScope()
 {
+    vector<SymbolTableRecord*> curr_scope;
+    curr_scope = symbol_table->top();
+    for (auto &symbol : curr_scope) {
+        delete symbol;
+    }
     symbol_table->pop();
+    offsets_stack->pop();
 }
 
+// Call this method only if you have checked earlier that DoesSymbolExists returns SYMBOL
 SymbolTableRecord* SymbolTable::GetSymbolRecordById(const string& id)
 {
     if (symbol_table->empty()){
+        //shouldn't get here
         throw exception();
     }
     vector<SymbolTableRecord*> scope;
@@ -125,22 +131,10 @@ SymbolTable::SymbolTable()
     offsets_stack->push(0);
     vector<tuple<string,string, bool>> print_arguments;
     print_arguments.push_back(tuple<string, string, bool>("string", "", false));
-    SymbolTableRecord* print_record = new FunctionSymbolTableRecord("print",
-                                                               offsets_stack->top(),
-                                                               print_arguments,
-                                                               "void");
-    int previous_offset = offsets_stack->top();
-    offsets_stack->pop();
-    offsets_stack->push(previous_offset + 1);
+    SymbolTableRecord* print_record = new FunctionSymbolTableRecord("print", 0, print_arguments, "void");
     vector<tuple<string,string, bool>> printi_arguments;
     printi_arguments.push_back(tuple<string, string, bool>("int", "", false));
-    SymbolTableRecord* printi_record = new FunctionSymbolTableRecord("printi",
-                                                                offsets_stack->top(),
-                                                                printi_arguments,
-                                                                "void");
-    previous_offset = offsets_stack->top();
-    offsets_stack->pop();
-    offsets_stack->push(previous_offset + 1);
+    SymbolTableRecord* printi_record = new FunctionSymbolTableRecord("printi", 0, printi_arguments, "void");
     vector<SymbolTableRecord*> scope = vector<SymbolTableRecord*>();
     scope.push_back(print_record);
     scope.push_back(printi_record);
@@ -149,18 +143,17 @@ SymbolTable::SymbolTable()
 
 SymbolTable::~SymbolTable()
 {
-    delete symbol_table;
-}
+    vector<SymbolTableRecord*> curr_scope;
+    while (!symbol_table->empty()){
+        curr_scope = symbol_table->top();
+        for (auto &symbol : curr_scope){
+            delete symbol;
+        }
+        symbol_table->pop();
+    }
 
-string SymbolTable::GetCurrFunctionReturnType()
-{
-    vector<SymbolTableRecord*> current_scope;
-    current_scope = symbol_table->top();
-    symbol_table->pop();
-    string return_type = (dynamic_cast<FunctionSymbolTableRecord*>(
-            (symbol_table->top()).back()))->GetFuncReturnType();
-    symbol_table->push(current_scope);
-    return return_type;
+    delete symbol_table;
+    delete offsets_stack;
 }
 
 void SymbolTable::InsertFunctionArgSymbol(
@@ -176,8 +169,10 @@ void SymbolTable::InsertFunctionArgSymbol(
             is_enum_type));
 }
 
+// Call this method only if you have checked earlier that DoesSymbolExists returns ENUM_VALUE
 string SymbolTable::FindEnumTypeByGivenValue(const string& value){
     if (symbol_table->empty()){
+        //shouldn't get here
         throw exception();
     }
     vector<SymbolTableRecord*> scope;
