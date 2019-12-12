@@ -1,14 +1,18 @@
-//
-// Created by owner on 09/12/2019.
-//
-#include "ParserFunctions.hpp"
 
-void ProgramEnumFuncs()
+#include "ParserFunctions.hpp"
+#include "symbol_table.hpp"
+#include "hw3_output.hpp"
+
+using namespace output;
+
+SymbolTable symbol_table;
+
+void CheckMainExists()
 {
-    if (symbol_table.does_symbol_exists("main")){
-        symbolTableRecord main_record = symbol_table.get_symbol_record_by_id("main");
-        vector<string> main_record_args = main_record.get_func_arguments_types();
-        string ret = main_record.get_func_ret_value_type();
+    if (symbol_table.DoesSymbolExists("main")){
+        SymbolTableRecord main_record = symbol_table.GetSymbolRecordById("main");
+        vector<pair<string,string>> main_record_args = main_record.GetFuncArgs();
+        string ret = main_record.GetFuncReturnType();
         if (!(main_record_args.empty() && ret == "void")){
             errorMainMissing();
         }
@@ -20,44 +24,44 @@ void ProgramEnumFuncs()
 
 
 void AddFunctionSymbolIfNotExists(
-        string symbol_name,
-        string type,
-        vector<string> args_types,
-        string ret_type)
+        const string& symbol_name,
+        const string& type,
+        const vector<pair<string,string>>& args_types,
+        const string& ret_type)
 {
-    if (symbol_table.does_symbol_exists(symbol_name)){
+    if (symbol_table.DoesSymbolExists(symbol_name)){
         //error
     }
     else {
-        symbol_table.insert_symbol(symbol_name, type, args_types, ret_type,
-                                   nullptr);
+        symbol_table.InsertSymbol(symbol_name, type, args_types, ret_type, vector<string>());
     }
 }
 
 void OpenNewScope()
 {
-    symbol_table.open_scope();
+    symbol_table.OpenScope();
 }
 
 void CloseCurrentScope()
 {
-    symbol_table.close_current_scope();
+    symbol_table.CloseCurrentScope();
 }
 
-void AddFuncArgsToSymbolTable(vector<pair<string,string>> args)
+void AddFuncArgsToSymbolTable(vector<pair<string,string>>& args)
 {
     int counter = -1;
-    for (auto it = args.begin(); it != args.end(); ++it){
-        if (symbol_table.does_symbol_exists((*it).second))
+    for (auto &arg : args) {
+        if (symbol_table.DoesSymbolExists(arg.second))
         {
             //error
         }
         else {
-            symbol_table.insert_function_arg_symbol(
-                    (*it).second,
-                    (*it).first,
+            symbol_table.InsertFunctionArgSymbol(
+                    arg.second,
+                    arg.first,
                     counter);
         }
+        counter--;
     }
 }
 
