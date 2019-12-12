@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <tuple>
 
 using namespace std;
 
@@ -32,20 +33,29 @@ struct dummy_t{
 };
 
 struct formals_t{
-    vector<pair<string, string>>* args;
+    vector<tuple<string, string, bool>>* args;
 };
 
 struct formalList_t{
-    vector<pair<string, string>>* args;
+    vector<tuple<string, string, bool>>* args;
 };
 
 struct formalDecl_t{
     string* type;
     string* argName;
+    bool isEnumType;
 };
 
 struct retType_t{
     string* type;
+};
+
+struct enumeratorList_t{
+    vector<string>* values;
+};
+
+struct enumerator_t{
+    string* value;
 };
 
 #endif //HW3SOL_SEMANTIC_TYPES_HPP

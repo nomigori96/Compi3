@@ -10,7 +10,8 @@ SymbolTable symbol_table;
 void CheckMainExists()
 {
     if (symbol_table.DoesSymbolExists("main")){
-        SymbolTableRecord main_record = symbol_table.GetSymbolRecordById("main");
+        FunctionSymbolTableRecord main_record =
+                dynamic_cast<FunctionSymbolTableRecord>(symbol_table.GetSymbolRecordById("main"));
         vector<pair<string,string>> main_record_args = main_record.GetFuncArgs();
         string ret = main_record.GetFuncReturnType();
         if (!(main_record_args.empty() && ret == "void")){
@@ -25,15 +26,26 @@ void CheckMainExists()
 
 void AddFunctionSymbolIfNotExists(
         const string& symbol_name,
-        const string& type,
-        const vector<pair<string,string>>& args_types,
+        const vector<tuple<string,string,bool>>& args,
         const string& ret_type)
 {
     if (symbol_table.DoesSymbolExists(symbol_name)){
         //error
     }
     else {
-        symbol_table.InsertSymbol(symbol_name, type, args_types, ret_type, vector<string>());
+        symbol_table.InsertFunction(symbol_name, args, ret_type);
+    }
+}
+
+void AddEnumSymbolIfNotExists(
+        const string& symbol_name,
+        const vector<string>& enum_values)
+{
+    if (symbol_table.DoesSymbolExists(symbol_name)){
+        //error
+    }
+    else {
+        symbol_table.InsertEnum(symbol_name, enum_values);
     }
 }
 
@@ -47,19 +59,20 @@ void CloseCurrentScope()
     symbol_table.CloseCurrentScope();
 }
 
-void AddFuncArgsToSymbolTable(vector<pair<string,string>>& args)
+void AddFuncArgsToSymbolTable(vector<tuple<string,string,bool>>& args)
 {
     int counter = -1;
     for (auto &arg : args) {
-        if (symbol_table.DoesSymbolExists(arg.second))
+        if (symbol_table.DoesSymbolExists(get<1>(arg)))
         {
             //error
         }
         else {
             symbol_table.InsertFunctionArgSymbol(
-                    arg.second,
-                    arg.first,
-                    counter);
+                    get<1>(arg),
+                    get<0>(arg),
+                    counter,
+                    get<2>(arg));
         }
         counter--;
     }

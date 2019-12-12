@@ -28,6 +28,7 @@ void yyerror(const char*);
     formalList_t formalsList;
     formalDecl_t formalsDecl;
     retType_t retType;
+    enumeratorList_t enumeratorList;
 }
 
 %token <character> B
@@ -73,7 +74,7 @@ void yyerror(const char*);
 %type <formals> Formals
 %type <formalsList> FormalsList
 %type <formalsDecl> FormalsDecl
-%type <dummy> EnumeratorList
+%type <enumeratorList> EnumeratorList
 %type <dummy> Enumerator
 %type <dummy> Statements
 %type <dummy> Statement
@@ -94,7 +95,7 @@ FuncDecl:           FuncDeclHeader Statements RBRACE {
                         CloseCurrentScope();
                     };
 FuncDeclHeader:     RetType ID LPAREN Formals RPAREN LBRACE {
-                        AddFunctionSymbolIfNotExists($2, "function" , *($4.args), *($1.type));
+                        AddFunctionSymbolIfNotExists($2, *($4.args), *($1.type));
                         OpenNewScope();
                         AddFuncArgsToSymbolTable(*($4.args));
                         delete $4.args;
@@ -108,25 +109,32 @@ CloseScope:         {
                     };
 Enums:              {}|
                     EnumDecl Enums {};
-EnumDecl:           ENUM ID LBRACE EnumeratorList RBRACE SC {};
+EnumDecl:           ENUM ID LBRACE EnumeratorList RBRACE SC {
+                        AddEnumSymbolIfNotExists($2, *($4.values));
+                        delete $4.values;
+                    };
 RetType:            Type {$$.type = $1.type;}|
                     VOID {$$.type = new string("void");};
 Formals:            {
-                        $$.args = new vector<pair<string, string>>();
+                        $$.args = new vector<tuple<string, string, bool>>();
                     }|
                     FormalsList {
                         $$.args = $1.args;
                     };
 FormalsList:        FormalDecl {
-                        $$.args = new vector<pair<string,string>>();
-                        pair<string,string>* argToAdd(*($1.type), *($1,argName));
+                        $$.args = new vector<tuple<string,string, bool>>();
+                        tuple<string,string, bool>* argToAdd(*($1.type),
+                                                             *($1.argName),
+                                                             $1.is_enum_type);
                         $$.args.push_back(argToAdd);
                         delete $1.type;
                         delete $1.argName;
                     }|
                     FormalDecl COMMA FormalsList {
                         $$.args = $3.args;
-                        pair<string,string>* argToAdd(*($1.type), *($1.argName));
+                        tuple<string,string, bool>* argToAdd(*($1.type),
+                                                             *($1.argName),
+                                                             $1.is_enum_type);
                         $$.args.insert(*($$.args).begin(), argToAdd);
                         delete $1.type;
                         delete $1.argName;
@@ -134,11 +142,26 @@ FormalsList:        FormalDecl {
 FormalDecl:         Type ID {
                         $$.type = $1.type;
                         $$.argName = new string($2);
+                        $$.isEnumType = false;
                     }|
-                    EnumType ID {};
-EnumeratorList:     Enumerator {}|
-                    EnumeratorList COMMA Enumerator {};
-Enumerator:         ID {};
+                    EnumType ID {
+                        $$.type = $1.typeName;
+                        $$.argName = new string($2);
+                        $$.isEnumType = true;
+                    };
+EnumeratorList:     Enumerator {
+                        $$.values = new vector<string>();
+                        $$.values->push_back(*($1.value));
+                        delete $1.value;
+                    }|
+                    EnumeratorList COMMA Enumerator {
+                        $$.values = $1.values;
+                        $$.values->push_back(*($3.value));
+                        delete $3.value;
+                    };
+Enumerator:         ID {
+                        $$.value = new string($1);
+                    };
 Statements:         Statement {}|
                     Statements Statement {};
 Statement:          LBRACE OpenScope Statements RBRACE CloseScope {}|

@@ -9,10 +9,12 @@ using namespace std;
 
 void CheckMainExists();
 void AddFunctionSymbolIfNotExists(
-        string symbol_name,
-        string type,
-        vector<string> args_types,
-        string ret_type);
+        string& symbol_name,
+        vector<tuple<string,string,bool>>& args,
+        string& ret_type);
+void AddEnumSymbolIfNotExists(
+        const string& symbol_name,
+        const vector<string>& enum_values);
 void OpenNewScope();
 void CloseCurrentScope();
 void AddFuncArgsToSymbolTable(vector<pair<string,string>>& args);

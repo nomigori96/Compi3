@@ -3,18 +3,44 @@
 void SymbolTable::InsertSymbol(
         const string& symbol_name,
         const string& type,
-        const vector<pair<string,string>>& func_arguments,
-        const string& func_return_value_type,
-        const vector<string>& enum_values)
+        bool is_enum_type)
 {
     symbol_table->top().push_back(
             SymbolTableRecord(
                 symbol_name,
                 offsets_stack->top(),
                 type,
-                func_arguments,
-                func_return_value_type,
-                enum_values));
+                is_enum_type));
+    int previous_offset = offsets_stack->top();
+    offsets_stack->pop();
+    offsets_stack->push(previous_offset + 1);
+}
+
+void SymbolTable::InsertFunction(
+        const string& symbol_name,
+        const vector<tuple<string,string, bool>>& func_arguments,
+        const string& func_return_value_type)
+{
+    symbol_table->top().push_back(
+            FunctionSymbolTableRecord(
+                    symbol_name,
+                    offsets_stack->top(),
+                    func_arguments,
+                    func_return_value_type));
+    int previous_offset = offsets_stack->top();
+    offsets_stack->pop();
+    offsets_stack->push(previous_offset + 1);
+}
+
+void SymbolTable::InsertEnum(
+        const string& symbol_name,
+        const vector<string>& enum_values)
+{
+    symbol_table->top().push_back(
+            EnumSymbolTableRecord(
+                    symbol_name,
+                    offsets_stack->top(),
+                    enum_values));
     int previous_offset = offsets_stack->top();
     offsets_stack->pop();
     offsets_stack->push(previous_offset + 1);
@@ -72,17 +98,21 @@ SymbolTable::SymbolTable()
     symbol_table = new stack<vector<SymbolTableRecord>>();
     offsets_stack = new stack<int>();
     offsets_stack->push(0);
-    vector<pair<string,string>> print_argument_types;
-    print_argument_types.push_back(pair<string, string>("string", ""));
-    SymbolTableRecord print_record = SymbolTableRecord("print", offsets_stack->top(), "function",
-                                                       print_argument_types, "void", vector<string>());
+    vector<tuple<string,string, bool>> print_arguments;
+    print_arguments.push_back(tuple<string, string, bool>("string", "", false));
+    SymbolTableRecord print_record = FunctionSymbolTableRecord("print",
+                                                               offsets_stack->top(),
+                                                               print_arguments,
+                                                               "void");
     int previous_offset = offsets_stack->top();
     offsets_stack->pop();
     offsets_stack->push(previous_offset + 1);
-    vector<pair<string,string>> printi_argument_types;
-    printi_argument_types.push_back(pair<string, string>("int", ""));
-    SymbolTableRecord printi_record = SymbolTableRecord("printi", offsets_stack->top(), "function",
-                                                        printi_argument_types, "void", vector<string>());
+    vector<tuple<string,string, bool>> printi_arguments;
+    printi_arguments.push_back(tuple<string, string, bool>("int", "", false));
+    SymbolTableRecord printi_record = FunctionSymbolTableRecord("printi",
+                                                                offsets_stack->top(),
+                                                                printi_arguments,
+                                                                "void");
     previous_offset = offsets_stack->top();
     offsets_stack->pop();
     offsets_stack->push(previous_offset + 1);
@@ -102,7 +132,9 @@ string SymbolTable::GetCurrFunctionReturnType()
     vector<SymbolTableRecord> current_scope;
     current_scope = symbol_table->top();
     symbol_table->pop();
-    string return_type = (symbol_table->top()).back().GetFuncReturnType();
+    string return_type = (dynamic_cast<FunctionSymbolTableRecord>(
+            (symbol_table->top()).back()))
+            .GetFuncReturnType();
     symbol_table->push(current_scope);
     return return_type;
 }
@@ -110,14 +142,13 @@ string SymbolTable::GetCurrFunctionReturnType()
 void SymbolTable::InsertFunctionArgSymbol(
         const string& symbol_name,
         const string& type,
-        int offset)
+        int offset,
+        bool is_enum_type)
 {
     symbol_table->top().push_back(SymbolTableRecord(
             symbol_name,
             offset,
             type,
-            vector<pair<string,string>>(),
-            "",
-            vector<string>()));
+            is_enum_type));
 }
 
