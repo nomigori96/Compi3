@@ -8,7 +8,7 @@
 
 using namespace std;
 
-//TODO add interface (class that symbol table inherits) to solve the fact there are irrelevant fields in the record
+// TODO - add interface (class that symbol table inherits) to solve the fact there are irrelevant fields in the record
 
 class SymbolTableRecord {
 private:
