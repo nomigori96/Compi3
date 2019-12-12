@@ -19,6 +19,7 @@ struct type_t{
 struct enumType_t{
     vector<string>* values;
     string* typeName;
+    string* fullType;
 };
 
 struct call_t{
@@ -56,6 +57,11 @@ struct enumeratorList_t{
 
 struct enumerator_t{
     string* value;
+};
+
+struct declareEnumVar_t{
+    string* fullType;
+    string* id;
 };
 
 #endif //HW3SOL_SEMANTIC_TYPES_HPP

@@ -139,7 +139,9 @@ string GetExpressionTypeById(string& id){
         return recordType;
     }
     if (symbol_table.DoesSymbolExists(id) == ENUM_VALUE){
-        return symbol_table.FindEnumTypeByGivenValue(id);
+        string enum_type = symbol_table.FindEnumTypeByGivenValue(id);
+        string enum_str = "enum ";
+        return enum_str + enum_type;
     }
 
     errorUndef(yylineno, id);
@@ -273,7 +275,7 @@ void CheckReturnValid(string& givenType){
     }
 }
 
-void ExplicitCast(string& castToType, string& castFromType){
+void IsExplicitCastAllowed(string& castToType, string& castFromType){
     if (!(castToType == "int" && castFromType == "enum")){
         errorMismatch(yylineno);
         exit(0);
@@ -287,6 +289,36 @@ void CheckNumValidity(int byteNum){
     }
 }
 
+
+
+void CheckEnumTypeDefined(string& enumTypeName, string& id){
+    if (symbol_table.DoesSymbolExists(enumTypeName) == SYMBOL &&
+            symbol_table.GetSymbolRecordById(enumTypeName)->GetType() == "enum"){
+        return;
+    }
+    errorUndefEnum(yylineno, id);
+    exit(0);
+}
+
+void CheckIfIdAlreadyExists(string& id){
+    if(symbol_table.DoesSymbolExists(id) != DOESNT_EXIST){
+        errorDef(yylineno, id);
+    }
+}
+
+void AddVariableSymbol(
+        string& symbol_name,
+        string& type,
+        bool is_enum_type){
+    symbol_table.InsertSymbol(symbol_name, type, is_enum_type);
+}
+
+void HandleEnumAssignment(string& lType, string& expType, string& id){
+    if (lType != expType){
+        errorUndefEnumValue(yylineno, id);
+        exit(0);
+    }
+}
 
 
 

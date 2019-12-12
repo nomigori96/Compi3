@@ -13,9 +13,9 @@ void AddVariableSymbolIfNotExists(
         string& type,
         bool is_enum_type);
 void AddFunctionSymbolIfNotExists(
-        string& symbol_name,
-        vector<tuple<string,string,bool>>& args,
-        string& ret_type);
+        const string& symbol_name,
+        const vector<tuple<string,string,bool>>& args,
+        const string& ret_type);
 void AddEnumSymbolIfNotExists(
         const string& symbol_name,
         const vector<string>& enum_values);
@@ -35,5 +35,12 @@ void CheckReturnValid(string& givenType);
 void IsExplicitCastAllowed(string& castToType, string& castFromType);
 void CheckNumValidity(int byteNum);
 vector<string> MapArgsToTypes(vector<tuple<string, string, bool>> fromRecord);
+
+void CheckEnumTypeDefined(string& enumTypeName, string& id);
+void CheckIfIdAlreadyExists(string& id);
+void AddVariableSymbol(
+        string& symbol_name,
+        string& type,
+        bool is_enum_type);
 
 #endif //HW3_PARSERFUNCTIONS_HPP

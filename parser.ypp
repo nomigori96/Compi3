@@ -5,6 +5,7 @@
 #include <string>
 
 using namespace std;
+using namespace output;
 
 extern int yylineno;
 
@@ -29,6 +30,7 @@ void yyerror(const char*);
     formalDecl_t formalsDecl;
     retType_t retType;
     enumeratorList_t enumeratorList;
+	declareEnumVar_t declareEnumVar;
 }
 
 %token <character> B
@@ -88,18 +90,20 @@ void yyerror(const char*);
 %type <dummy> CloseScope
 %type <dummy> IfHeader
 %type <dummy> WhileHeader
+%type <declareEnumVar> DeclareEnumVar 
 
 %%
 
 Program:            Enums Funcs {
                         CheckMainExists()
                     };
-Funcs:              {} |
-                    FuncDecl Funcs {};
+Funcs:              |
+                    FuncDecl Funcs ;
 FuncDecl:           FuncDeclHeader Statements RBRACE {
                         CloseCurrentScope();
                     };
 FuncDeclHeader:     RetType ID LPAREN Formals RPAREN LBRACE {
+						//TODO - If we do check the formals are not shadowing inside the formals, we need to insert the symbol for the function before we get to the formals part (change the grammer)
                         AddFunctionSymbolIfNotExists($2, *($4.args), *($1.type));
                         UpdateCurrFunctionRetType(*($1.type));
                         OpenNewScope();
@@ -113,8 +117,8 @@ OpenScope:          {
 CloseScope:         {
                         CloseCurrentScope();
                     };
-Enums:              {}|
-                    EnumDecl Enums {};
+Enums:              |
+                    EnumDecl Enums ;
 EnumDecl:           ENUM ID LBRACE EnumeratorList RBRACE SC {
                         AddEnumSymbolIfNotExists($2, *($4.values));
                         delete $4.values;
@@ -146,11 +150,14 @@ FormalsList:        FormalDecl {
                         delete $1.argName;
                     };
 FormalDecl:         Type ID {
+						//TODO - maybe we should check here if ID already exists in symbol_table?? because the error prints the line number
                         $$.type = $1.type;
                         $$.argName = new string($2);
                         $$.isEnumType = false;
                     }|
                     EnumType ID {
+						//TODO - maybe we should check here if ID already exists in symbol_table?? because the error prints the line number
+						CheckEnumTypeDefined(*($1.typeName), $2);
                         $$.type = $1.typeName;
                         $$.argName = new string($2);
                         $$.isEnumType = true;
@@ -168,8 +175,8 @@ EnumeratorList:     Enumerator {
 Enumerator:         ID {
                         $$.value = new string($1);
                     };
-Statements:         Statement {}|
-                    Statements Statement {};
+Statements:         Statement |
+                    Statements Statement ;
 Statement:          LBRACE OpenScope Statements RBRACE {
                         CloseCurrentScope();
                     }|
@@ -177,19 +184,21 @@ Statement:          LBRACE OpenScope Statements RBRACE {
                         AddVariableSymbolIfNotExists($2, *($1.type), false);
                         delete $1.type;
                     }|
-                    EnumType ID SC {
-                        AddVariableSymbolIfNotExists($2, *($1.typeName), true);
-                        delete $1.typeName;
-                    }|
-                    EnumDecl {}|
+                    DeclareEnumVar SC {
+						delete $1.fullType;
+						delete $1.id;
+					}|
+                    EnumDecl |
                     Type ID ASSIGN Exp SC {
                         HandleAssignment(*($1.type), *($4.type), $2);
                         delete $1.type;
                         delete $4.type;
                     }|
-                    EnumType ID ASSIGN Exp SC {
-                        HandleAssignment(*($1.typeName), *($4.type), $2);
+                    DeclareEnumVar ASSIGN Exp SC {
+						//TODO - again lineno can be wrong if there are a lot of empty lines before the SC
+                        HandleEnumAssignment(*($1.fullType), *($4.type), *($1.id));
                         delete $1.typeName;
+						delete $1.fullType;
                         delete $4.type;
                     }|
                     ID ASSIGN Exp SC {
@@ -222,6 +231,13 @@ Statement:          LBRACE OpenScope Statements RBRACE {
                     CONTINUE SC {
                         CheckIfContinueInLoop();
                     };
+DeclareEnumVar:		EnumType ID {	
+						CheckEnumTypeDefined(*($1.typeName), $2);
+						CheckIfIdAlreadyExists($2);
+						AddVariableSymbol($2, *($1.fullType), true);
+						$$.fullType = $1.fullType;
+						$$.id = new string ($2);
+					};
 IfHeader:           IF LPAREN Exp RPAREN {
                         vector<string> expected(1, "bool");
                         CheckTypesMatch(expected, *($3.type));
@@ -254,7 +270,10 @@ Type:               INT {$$.type = new string("int");}|
                     BYTE {$$.type = new string("byte");}|
                     BOOL {$$.type = new string("bool");};
 EnumType:           ENUM ID {
-                        $$.typeName = new string($2);
+						string enum_str = string("enum ");
+						string full_type = enum_str + $2;
+                        $$.fullType = new string(full_type);
+						$$.typeName = new string($2);
                     };
 Exp:                LPAREN Exp RPAREN %prec PARENS {
                         $$.type = $2.type;
@@ -339,7 +358,9 @@ Exp:                LPAREN Exp RPAREN %prec PARENS {
                         delete $3.type;
                     }|
                     LPAREN Type RPAREN Exp %prec CAST {
-
+						IsExplicitCastAllowed($2.type, $4.type);
+						delete $2.type;
+                        delete $4.type;
                     };
 
 %%
