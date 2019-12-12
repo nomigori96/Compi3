@@ -20,10 +20,12 @@ void CheckMainExists()
         string ret = main_record->GetFuncReturnType();
         if (!(main_record_args.empty() && ret == "void")){
             errorMainMissing();
+            exit(0);
         }
     }
     else {
         errorMainMissing();
+        exit(0);
     }
 }
 
@@ -34,7 +36,8 @@ void AddFunctionSymbolIfNotExists(
         const string& ret_type)
 {
     if (symbol_table.DoesSymbolExists(symbol_name) != DOESNT_EXIST){
-        //error
+        errorDef(yylineno, symbol_name);
+        exit(0);
     }
     else {
         symbol_table.InsertFunction(symbol_name, args, ret_type);
@@ -46,7 +49,8 @@ void AddEnumSymbolIfNotExists(
         const vector<string>& enum_values)
 {
     if (symbol_table.DoesSymbolExists(symbol_name) != DOESNT_EXIST){
-        //error
+        errorDef(yylineno, symbol_name);
+        exit(0);
     }
     else {
         symbol_table.InsertEnum(symbol_name, enum_values);
@@ -69,7 +73,8 @@ void AddFuncArgsToSymbolTable(vector<tuple<string,string,bool>>& args)
     for (auto &arg : args) {
         if (symbol_table.DoesSymbolExists(get<1>(arg)) != DOESNT_EXIST)
         {
-            //error
+            errorDef(yylineno, get<1>(arg));
+            exit(0);
         }
         else {
             symbol_table.InsertFunctionArgSymbol(
@@ -102,12 +107,18 @@ string DetermineBinopReturnType(string& first, string& second){
 string GetExpressionTypeById(string& id){
     if (symbol_table.DoesSymbolExists(id) == SYMBOL){
         SymbolTableRecord* wantedRecord = symbol_table.GetSymbolRecordById(id);
-        return wantedRecord->GetType();
+        string recordType = wantedRecord->GetType();
+        if (recordType == "function" || recordType == "enum"){
+            errorUndef(yylineno, id);
+            exit(0);
+        }
+        return recordType;
     }
     if (symbol_table.DoesSymbolExists(id) == ENUM_VALUE){
         return symbol_table.FindEnumTypeByGivenValue(id);
     }
-    //error
+
+    errorUndef(yylineno, id);
     exit(0);
 }
 
@@ -167,13 +178,15 @@ void AddVariableSymbolIfNotExists(string& symbol_name,
                                   string& type,
                                   bool is_enum_type){
     if (symbol_table.DoesSymbolExists(symbol_name) != DOESNT_EXIST){
-        //error
+        errorDef(yylineno, symbol_name);
+        exit(0);
     }
     if (IsVarTypeValid(type)){
         symbol_table.InsertSymbol(symbol_name, type, is_enum_type);
     }
     else {
         errorUndefEnum(yylineno, symbol_name);
+        exit(0);
     }
 }
 
@@ -191,7 +204,7 @@ void HandleAssignment(string& lType, string& expType, string& id){
 
 void HandleAssignmentForExistingVar(string& id, string& expType){
     if (symbol_table.DoesSymbolExists(id) != SYMBOL){
-        //error
+        errorUndef(yylineno, id);
         exit(0);
     }
     string wanted_type = symbol_table.GetSymbolRecordById(id)->GetType();
@@ -232,6 +245,20 @@ void UpdateCurrFunctionRetType(string& retType){
 void CheckReturnValid(string& givenType){
     if (curr_function_return_type != givenType && !IsImplicitCastAllowed(curr_function_return_type, givenType)){
         errorMismatch(yylineno);
+        exit(0);
+    }
+}
+
+void ExplicitCast(string& castToType, string& castFromType){
+    if (!(castToType == "int" && castFromType == "enum")){
+        errorMismatch(yylineno);
+        exit(0);
+    }
+}
+
+void CheckNumValidity(int byteNum){
+    if (byteNum > 255){
+        errorByteTooLarge(yylineno, to_string(byteNum));
         exit(0);
     }
 }

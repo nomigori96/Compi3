@@ -165,29 +165,41 @@ Enumerator:         ID {
                     };
 Statements:         Statement {}|
                     Statements Statement {};
-Statement:          LBRACE OpenScope Statements RBRACE CloseScope {}|
+Statement:          LBRACE OpenScope Statements RBRACE {
+                        CloseCurrentScope();
+                    }|
                     Type ID SC {
                         AddVariableSymbolIfNotExists($2, *($1.type), false);
+                        delete $1.type;
                     }|
                     EnumType ID SC {
                         AddVariableSymbolIfNotExists($2, *($1.typeName), true);
+                        delete $1.typeName;
                     }|
                     EnumDecl {}|
                     Type ID ASSIGN Exp SC {
                         HandleAssignment(*($1.type), *($4.type), $2);
+                        delete $1.type;
+                        delete $4.type;
                     }|
                     EnumType ID ASSIGN Exp SC {
                         HandleAssignment(*($1.typeName), *($4.type), $2);
+                        delete $1.typeName;
+                        delete $4.type;
                     }|
                     ID ASSIGN Exp SC {
                         HandleAssignmentForExistingVar($1, *($3.type));
+                        delete $3.type;
                     }|
-                    Call SC {}|
+                    Call SC {
+                        delete $1.type;
+                    }|
                     RETURN SC {
                         CheckReturnValid("void");
                     }|
                     RETURN Exp SC {
                         CheckReturnValid(*($2.type));
+                        delete $2.type;
                     }|
                     IF LPAREN Exp RPAREN  OpenScope Statement {
                         //TODO - waiting for reply
@@ -231,8 +243,12 @@ ExpList:            Exp {
 Type:               INT {$$.type = new string("int");}|
                     BYTE {$$.type = new string("byte");}|
                     BOOL {$$.type = new string("bool");};
-EnumType:           ENUM ID {};
-Exp:                LPAREN Exp RPAREN %prec PARENS {}|
+EnumType:           ENUM ID {
+                        $$.typeName = new string($2);
+                    };
+Exp:                LPAREN Exp RPAREN %prec PARENS {
+                        $$.type = $2.type;
+                    }|
                     Exp ADDITIVE Exp {
                         vector<string> expected;
                         expected.push_back("int");
@@ -263,6 +279,7 @@ Exp:                LPAREN Exp RPAREN %prec PARENS {}|
                         $$.type = new string("int");
                     }|
                     NUM B {
+                        CheckNumValidity($1);
                         $$.type = new string("byte");
                     }|
                     STRING {
@@ -311,7 +328,9 @@ Exp:                LPAREN Exp RPAREN %prec PARENS {}|
                         delete $1.type;
                         delete $3.type;
                     }|
-                    LPAREN Type RPAREN Exp %prec CAST {};
+                    LPAREN Type RPAREN Exp %prec CAST {
+
+                    };
 
 %%
 

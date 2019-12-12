@@ -32,5 +32,7 @@ void CheckIfBreakInLoop();
 void CheckIfContinueInLoop();
 void UpdateCurrFunctionRetType(string& retType);
 void CheckReturnValid(string& givenType);
+void IsExplicitCastAllowed(string& castToType, string& castFromType);
+void CheckNumValidity(int byteNum);
 
 #endif //HW3_PARSERFUNCTIONS_HPP
