@@ -192,20 +192,72 @@ Type:               INT {$$.type = new string("int");}|
                     BOOL {$$.type = new string("bool");};
 EnumType:           ENUM ID {};
 Exp:                LPAREN Exp RPAREN %prec PARENS {}|
-                    Exp ADDITIVE Exp {}|
-                    Exp MUL Exp {}|
+                    Exp ADDITIVE Exp {
+                        vector<string> expected;
+                        expected.push_back("int");
+                        expected.push_back("byte");
+                        CheckTypesMatch(expected, $1.type);
+                        CheckTypesMatch(expected, $3.type);
+                        $$.type = new string(DetermineBinopReturnType($1.type, $3.type));
+                    }|
+                    Exp MUL Exp {
+                        vector<string> expected;
+                        expected.push_back("int");
+                        expected.push_back("byte");
+                        CheckTypesMatch(expected, $1.type);
+                        CheckTypesMatch(expected, $3.type);
+                        $$.type = new string(DetermineBinopReturnType($1.type, $3.type));
+                    }|
                     ID {}|
                     Call {}|
-                    NUM {}|
-                    NUM B {}|
-                    STRING {}|
-                    TRUE {}|
-                    FALSE {}|
-                    NOT Exp {}|
-                    Exp AND Exp {}|
-                    Exp OR Exp {}|
-                    Exp RELATIONAL Exp {}|
-                    Exp EQUALITY Exp {}|
+                    NUM {
+                        $$.type = new string("int");
+                    }|
+                    NUM B {
+                        $$.type = new string("byte");
+                    }|
+                    STRING {
+                        $$.type = new string("string");
+                    }|
+                    TRUE {
+                        $$.type = new string("bool");
+                    }|
+                    FALSE {
+                        $$.type = new string("bool");
+                    }|
+                    NOT Exp {
+                        vector<string> expected(1, "bool");
+                        CheckTypesMatch(expected, $2.type);
+                        $$.type = new string("bool");
+                    }|
+                    Exp AND Exp {
+                        vector<string> expected(1, "bool");
+                        CheckTypesMatch(expected, $1.type);
+                        CheckTypesMatch(expected, $3.type);
+                        $$.type = new string("bool");
+                    }|
+                    Exp OR Exp {
+                        vector<string> expected(1, "bool");
+                        CheckTypesMatch(expected, $1.type);
+                        CheckTypesMatch(expected, $3.type);
+                        $$.type = new string("bool");
+                    }|
+                    Exp RELATIONAL Exp {
+                        vector<string> expected;
+                        expected.push_back("int");
+                        expected.push_back("byte");
+                        CheckTypesMatch(expected, $1.type);
+                        CheckTypesMatch(expected, $3.type);
+                        $$.type = new string("bool");
+                    }|
+                    Exp EQUALITY Exp {
+                        vector<string> expected;
+                        expected.push_back("int");
+                        expected.push_back("byte");
+                        CheckTypesMatch(expected, $1.type);
+                        CheckTypesMatch(expected, $3.type);
+                        $$.type = new string("bool");
+                    }|
                     LPAREN Type RPAREN Exp %prec CAST {};
 
 %%

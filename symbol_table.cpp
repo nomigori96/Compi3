@@ -1,5 +1,14 @@
 #include "symbol_table.hpp"
 
+bool EnumSymbolTableRecord::DoesValueExists(const string& value){
+    for (auto &enum_value : enum_values){
+        if (enum_value == value){
+            return true;
+        }
+    }
+    return false;
+}
+
 void SymbolTable::InsertSymbol(
         const string& symbol_name,
         const string& type,
@@ -57,7 +66,7 @@ void SymbolTable::CloseCurrentScope()
     symbol_table->pop();
 }
 
-SymbolTableRecord SymbolTable::GetSymbolRecordById(const string& id)
+SymbolTableRecord* SymbolTable::GetSymbolRecordById(const string& id)
 {
     if (symbol_table->empty()){
         return nullptr;
@@ -66,11 +75,11 @@ SymbolTableRecord SymbolTable::GetSymbolRecordById(const string& id)
     scope = symbol_table->top();
     for (auto &symbol : scope) {
         if (symbol.GetName() == id){
-            return symbol;
+            return new SymbolTableRecord(symbol);
         }
     }
     symbol_table->pop();
-    SymbolTableRecord result = GetSymbolRecordById(id);
+    SymbolTableRecord* result = GetSymbolRecordById(id);
     symbol_table->push(scope);
     return result;
 }
@@ -83,7 +92,9 @@ bool SymbolTable::DoesSymbolExists(const string& id)
     vector<SymbolTableRecord> scope;
     scope = symbol_table->top();
     for (auto &symbol : scope) {
-        if (symbol.GetName() == id){
+        if (symbol.GetName() == id ||
+                (symbol.GetType() == "enum" &&
+                        dynamic_cast<EnumSymbolTableRecord>(symbol).DoesValueExists(id) )){
             return true;
         }
     }
@@ -150,5 +161,27 @@ void SymbolTable::InsertFunctionArgSymbol(
             offset,
             type,
             is_enum_type));
+}
+
+string SymbolTable::FindEnumTypeByGivenValue(const string& value){
+    if (symbol_table->empty()){
+        return nullptr;
+    }
+    vector<SymbolTableRecord> scope;
+    scope = symbol_table->top();
+    for (auto &symbol : scope) {
+        if (symbol.GetType() == "enum"){
+            vector<string> enumValues = dynamic_cast<EnumSymbolTableRecord>(symbol).GetEnumValues();
+            for (auto &enumVal : enumValues){
+                if (enumVal == value){
+                    return symbol.GetName();
+                }
+            }
+        }
+    }
+    symbol_table->pop();
+    string result = FindEnumTypeByGivenValue(value);
+    symbol_table->push(scope);
+    return result;
 }
 

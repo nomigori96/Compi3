@@ -18,5 +18,7 @@ void AddEnumSymbolIfNotExists(
 void OpenNewScope();
 void CloseCurrentScope();
 void AddFuncArgsToSymbolTable(vector<pair<string,string>>& args);
+void CheckTypesMatch(string& expected, string& given);
+string DetermineBinopReturnType(string& first, string& second);
 
 #endif //HW3_PARSERFUNCTIONS_HPP

@@ -71,6 +71,7 @@ public:
     EnumSymbolTableRecord(const SymbolTableRecord &to_copy) = default;
     EnumSymbolTableRecord& operator=(const SymbolTableRecord &to_copy) = default;
     vector<string> GetEnumValues() const {return enum_values;}
+    bool DoesValueExists(const string& value);
 
 };
 
@@ -99,10 +100,11 @@ public:
     void OpenScope();
     void CloseCurrentScope();
     string GetCurrFunctionReturnType();
-    SymbolTableRecord GetSymbolRecordById(const string& id);
+    SymbolTableRecord* GetSymbolRecordById(const string& id);
     bool DoesSymbolExists(const string& id);
     SymbolTable();
     ~SymbolTable();
+    string FindEnumTypeByGivenValue(const string& value);
 };
 
 #endif //HW3_SYMBOL_TABLE_HPP
