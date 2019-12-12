@@ -64,6 +64,22 @@ void OpenNewScope()
 
 void CloseCurrentScope()
 {
+    endScope();
+    vector<SymbolTableRecord*> currentScope = symbol_table.GetCurrentScope();
+    for (auto &symbol : currentScope){
+        if (symbol->IsEnumType()){
+            string enum_str("enum ");
+            printID(symbol->GetName(), symbol->GetOffset(), enum_str + symbol->GetType());
+        } else if (symbol->GetType() == "function"){
+            string retType = dynamic_cast<FunctionSymbolTableRecord*>(symbol)->GetFuncReturnType();
+            vector<string> argTypes = MapArgsToTypes(dynamic_cast<FunctionSymbolTableRecord*>(symbol)->GetFuncArgs());
+            string type = makeFunctionType(retType, argTypes);
+            printID(symbol->GetName(), 0, type);
+        }
+        else {
+            printID(symbol->GetName(), symbol->GetOffset(), symbol->GetType());
+        }
+    }
     symbol_table.CloseCurrentScope();
 }
 

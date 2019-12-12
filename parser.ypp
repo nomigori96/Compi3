@@ -83,6 +83,10 @@ void yyerror(const char*);
 %type <type> Type
 %type <enumType> EnumType
 %type <exp> Exp
+%type <dummy> FuncDeclHeader
+%type <dummy> OpenScope
+%type <dummy> CloseScope
+%type <dummy> OpenScopeForLoop
 
 %%
 

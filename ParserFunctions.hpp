@@ -34,5 +34,6 @@ void UpdateCurrFunctionRetType(string& retType);
 void CheckReturnValid(string& givenType);
 void IsExplicitCastAllowed(string& castToType, string& castFromType);
 void CheckNumValidity(int byteNum);
+vector<string> MapArgsToTypes(vector<tuple<string, string, bool>> fromRecord);
 
 #endif //HW3_PARSERFUNCTIONS_HPP

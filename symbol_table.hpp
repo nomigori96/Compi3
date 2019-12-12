@@ -107,6 +107,7 @@ public:
     SymbolTable();
     ~SymbolTable();
     string FindEnumTypeByGivenValue(const string& value);
+    vector<SymbolTableRecord*> GetCurrentScope(){return symbol_table->top()};
 };
 
 #endif //HW3_SYMBOL_TABLE_HPP

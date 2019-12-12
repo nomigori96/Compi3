@@ -48,12 +48,9 @@ void SymbolTable::InsertFunction(
     symbol_table->top().push_back(
             new FunctionSymbolTableRecord(
                     symbol_name,
-                    offsets_stack->top(),
+                    0,
                     func_arguments,
                     func_return_value_type));
-    int previous_offset = offsets_stack->top();
-    offsets_stack->pop();
-    offsets_stack->push(previous_offset + 1);
 }
 
 void SymbolTable::InsertEnum(
