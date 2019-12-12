@@ -9,6 +9,8 @@
 
 using namespace std;
 
+enum Options {ENUM_VALUE, SYMBOL, DOESNT_EXIST};
+
 class SymbolTableRecord {
 protected:
     string name;
@@ -25,9 +27,9 @@ public:
                                     offset(offset_p),
                                     type(type_p),
                                     is_enum_type(is_enum_type_p){}
-    virtual ~SymbolTableRecord() = default;
-    SymbolTableRecord(const SymbolTableRecord &to_copy) = default;
-    virtual SymbolTableRecord& operator=(const SymbolTableRecord &to_copy) = default;
+    virtual ~SymbolTableRecord(){};
+    SymbolTableRecord(const SymbolTableRecord &to_copy);
+    virtual SymbolTableRecord& operator=(const SymbolTableRecord &to_copy);
     string GetName() const {return name;}
     string GetType() const {return type;}
     int GetOffset() const {return offset;}
@@ -77,7 +79,7 @@ public:
 
 class SymbolTable{
 private:
-    stack<vector<SymbolTableRecord>>* symbol_table;
+    stack<vector<SymbolTableRecord*>>* symbol_table;
     stack<int>* offsets_stack;
 
 public:
@@ -101,7 +103,7 @@ public:
     void CloseCurrentScope();
     string GetCurrFunctionReturnType();
     SymbolTableRecord* GetSymbolRecordById(const string& id);
-    bool DoesSymbolExists(const string& id);
+    Options DoesSymbolExists(const string& id);
     SymbolTable();
     ~SymbolTable();
     string FindEnumTypeByGivenValue(const string& value);

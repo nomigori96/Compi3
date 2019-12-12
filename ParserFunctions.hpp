@@ -20,5 +20,6 @@ void CloseCurrentScope();
 void AddFuncArgsToSymbolTable(vector<pair<string,string>>& args);
 void CheckTypesMatch(string& expected, string& given);
 string DetermineBinopReturnType(string& first, string& second);
+string CheckFunction(string& id, vector<string> expListTypes);
 
 #endif //HW3_PARSERFUNCTIONS_HPP

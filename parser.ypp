@@ -183,10 +183,23 @@ Statement:          LBRACE OpenScope Statements RBRACE CloseScope {}|
                     }|
                     BREAK SC {}|
                     CONTINUE SC {};
-Call:               ID LPAREN ExpList RPAREN {}|
-                    ID LPAREN RPAREN {};
-ExpList:            Exp {}|
-                    Exp COMMA ExpList {};
+Call:               ID LPAREN ExpList RPAREN {
+                        $$.type = new string(checkFunction($1, *($3.types)));
+                        delete $3.types;
+                    }|
+                    ID LPAREN RPAREN {
+                        $$.type = new string(checkFunction($1, vector<string>()));
+                    };
+ExpList:            Exp {
+                        $$.types = new vector<string>();
+                        $$.types->push_back($1.type);
+                        delete $1.type;
+                    }|
+                    Exp COMMA ExpList {
+                        $3.types->insert($3.types->begin(), $1.type);
+                        $$.types = $3.types;
+                        delete $1.type;
+                    };
 Type:               INT {$$.type = new string("int");}|
                     BYTE {$$.type = new string("byte");}|
                     BOOL {$$.type = new string("bool");};
@@ -208,8 +221,12 @@ Exp:                LPAREN Exp RPAREN %prec PARENS {}|
                         CheckTypesMatch(expected, $3.type);
                         $$.type = new string(DetermineBinopReturnType($1.type, $3.type));
                     }|
-                    ID {}|
-                    Call {}|
+                    ID {
+                        GetExpressionTypeById($1);
+                    }|
+                    Call {
+                        $$.type = $1.type;
+                    }|
                     NUM {
                         $$.type = new string("int");
                     }|
