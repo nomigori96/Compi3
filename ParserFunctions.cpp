@@ -6,6 +6,9 @@
 using namespace output;
 
 SymbolTable symbol_table;
+bool is_in_loop = false;
+string curr_function_return_type = "";
+
 extern int yylineno;
 
 void CheckMainExists()
@@ -151,6 +154,88 @@ string CheckFunction(string& id, vector<string> expListTypes){
     errorUndefFunc(yylineno, id);
     exit(0);
 }
+
+bool IsVarTypeValid(string& type){
+    if(type == "byte" || type == "int" || type == "bool"){
+        return true;
+    }
+    return symbol_table.DoesSymbolExists(type) == SYMBOL &&
+            symbol_table.GetSymbolRecordById(type)->GetType() == "enum";
+}
+
+void AddVariableSymbolIfNotExists(string& symbol_name,
+                                  string& type,
+                                  bool is_enum_type){
+    if (symbol_table.DoesSymbolExists(symbol_name) != DOESNT_EXIST){
+        //error
+    }
+    if (IsVarTypeValid(type)){
+        symbol_table.InsertSymbol(symbol_name, type, is_enum_type);
+    }
+    else {
+        errorUndefEnum(yylineno, symbol_name);
+    }
+}
+
+bool IsImplicitCastAllowed(string& lType, string& expType){
+    return lType == "int" && expType == "byte";
+}
+
+void HandleAssignment(string& lType, string& expType, string& id){
+    if (lType != expType && !IsImplicitCastAllowed(lType, expType)){
+        errorMismatch(yylineno);
+        exit(0);
+    }
+    AddVariableSymbolIfNotExists(id, lType, false);
+}
+
+void HandleAssignmentForExistingVar(string& id, string& expType){
+    if (symbol_table.DoesSymbolExists(id) != SYMBOL){
+        //error
+        exit(0);
+    }
+    string wanted_type = symbol_table.GetSymbolRecordById(id)->GetType();
+    if (wanted_type != expType && !IsImplicitCastAllowed(wanted_type, expType)){
+        if(wanted_type == "byte" || wanted_type == "int" || wanted_type == "bool" ||
+                symbol_table.GetSymbolRecordById(id)->IsEnumType()){
+            errorMismatch(yylineno);
+        }
+        else {
+            errorUndef(yylineno, id);
+        }
+        exit(0);
+    }
+}
+
+void FlipLoopStatus(){
+    is_in_loop = !is_in_loop;
+}
+
+void CheckIfBreakInLoop(){
+    if (!is_in_loop){
+        errorUnexpectedBreak(yylineno);
+        exit(0);
+    }
+}
+
+void CheckIfContinueInLoop(){
+    if (!is_in_loop){
+        errorUnexpectedContinue(yylineno);
+        exit(0);
+    }
+}
+
+void UpdateCurrFunctionRetType(string& retType){
+    curr_function_return_type = retType;
+}
+
+void CheckReturnValid(string& givenType){
+    if (curr_function_return_type != givenType && !IsImplicitCastAllowed(curr_function_return_type, givenType)){
+        errorMismatch(yylineno);
+        exit(0);
+    }
+}
+
 
 
 

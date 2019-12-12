@@ -8,6 +8,10 @@
 using namespace std;
 
 void CheckMainExists();
+void AddVariableSymbolIfNotExists(
+        string& symbol_name,
+        string& type,
+        bool is_enum_type);
 void AddFunctionSymbolIfNotExists(
         string& symbol_name,
         vector<tuple<string,string,bool>>& args,
@@ -21,5 +25,12 @@ void AddFuncArgsToSymbolTable(vector<pair<string,string>>& args);
 void CheckTypesMatch(string& expected, string& given);
 string DetermineBinopReturnType(string& first, string& second);
 string CheckFunction(string& id, vector<string> expListTypes);
+void HandleAssignment(string& lType, string& expType, string& id);
+void HandleAssignmentForExistingVar(string& id, string& expType);
+void FlipLoopStatus();
+void CheckIfBreakInLoop();
+void CheckIfContinueInLoop();
+void UpdateCurrFunctionRetType(string& retType);
+void CheckReturnValid(string& givenType);
 
 #endif //HW3_PARSERFUNCTIONS_HPP
