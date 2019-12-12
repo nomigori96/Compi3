@@ -75,9 +75,17 @@ void CloseCurrentScope()
             vector<string> argTypes = MapArgsToTypes(dynamic_cast<FunctionSymbolTableRecord*>(symbol)->GetFuncArgs());
             string type = makeFunctionType(retType, argTypes);
             printID(symbol->GetName(), 0, type);
+        } else if (symbol->GetType() == "enum"){
+            //Do nothing
         }
         else {
             printID(symbol->GetName(), symbol->GetOffset(), symbol->GetType());
+        }
+    }
+    for (auto &symbol : currentScope){
+        if (symbol->GetType() == "enum"){
+            vector<string> enumValues = dynamic_cast<EnumSymbolTableRecord*>(symbol)->GetEnumValues();
+            printEnumType(symbol->GetName(), enumValues);
         }
     }
     symbol_table.CloseCurrentScope();

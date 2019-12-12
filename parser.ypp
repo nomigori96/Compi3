@@ -86,7 +86,8 @@ void yyerror(const char*);
 %type <dummy> FuncDeclHeader
 %type <dummy> OpenScope
 %type <dummy> CloseScope
-%type <dummy> OpenScopeForLoop
+%type <dummy> IfHeader
+%type <dummy> WhileHeader
 
 %%
 
@@ -205,15 +206,13 @@ Statement:          LBRACE OpenScope Statements RBRACE {
                         CheckReturnValid(*($2.type));
                         delete $2.type;
                     }|
-                    IF LPAREN Exp RPAREN  OpenScope Statement {
-                        //TODO - waiting for reply
+                    IfHeader Statement {
                         CloseCurrentScope();
                     }|
-                    IF LPAREN Exp RPAREN OpenScope Statement CloseScope ELSE OpenScope Statement CloseScope {
-                        //TODO - waiting for reply
+                    IfHeader Statement CloseScope ELSE OpenScope Statement {
+                        CloseCurrentScope();
                     }|
-                    WHILE LPAREN Exp RPAREN OpenScopeForLoop Statement {
-                        //TODO - waiting for reply
+                    WhileHeader Statement {
                         FlipLoopStatus();
                         CloseCurrentScope();
                     }|
@@ -223,7 +222,14 @@ Statement:          LBRACE OpenScope Statements RBRACE {
                     CONTINUE SC {
                         CheckIfContinueInLoop();
                     };
-OpenScopeForLoop:   {
+IfHeader:           IF LPAREN Exp RPAREN {
+                        vector<string> expected(1, "bool");
+                        CheckTypesMatch(expected, *($3.type));
+                        OpenNewScope();
+                    };
+WhileHeader:        WHILE LPAREN Exp RPAREN {
+                        vector<string> expected(1, "bool");
+                        CheckTypesMatch(expected, *($3.type));
                         FlipLoopStatus();
                         OpenNewScope();
                     };
