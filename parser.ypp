@@ -109,13 +109,14 @@ FuncIdDecl:         RetType ID {
                         AddFunctionSymbolIfNotExists($2, *($1.type));
                         UpdateCurrFunctionRetType(*($1.type));
                         $$.funcId = new string($2);
+						delete $1.type;
                     };
 FuncDeclHeader:     FuncIdDecl LPAREN Formals RPAREN LBRACE {
                         UpdateFunctionSymbolArgs(*($3.args), *($1.funcId))
                         OpenNewScope();
-                        AddFuncArgsToSymbolTable(*($4.args));
-                        delete $4.args;
-                        delete $1.type;
+                        AddFuncArgsToSymbolTable(*($3.args));
+						delete $3.args;
+                        delete $1.funcId;
                     };
 OpenScope:          {
                         OpenNewScope();
@@ -130,11 +131,12 @@ EnumIdDecl:         ENUM ID {
                         $$.enumId = new string($2);
                     };
 EnumDecl:           EnumIdDecl LBRACE EnumeratorList RBRACE SC {
-                        UpdateEnumSymbolValues(*($3.values), $1.enumId);
-                        delete $4.values;
+                        UpdateEnumSymbolValues(*($3.values), *($1.enumId));
+                        delete $3.values;
+						delete $1.enumId;
                     };
 RetType:            Type {$$.type = $1.type;}|
-                    VOID {$$.type = new string("void");};
+                    VOID {$$.type = new string("VOID");};
 Formals:            {
                         $$.args = new vector<tuple<string, string, bool>>();
                     }|
@@ -181,7 +183,7 @@ EnumeratorList:     Enumerator {
                     }|
                     EnumeratorList COMMA Enumerator {
                         $$.values = $1.values;
-                        CheckNoDuplicatesEnumList($$.values, *($3.value));
+                        CheckNoDuplicatesEnumList(*($1.values), *($3.value));
                         $$.values->push_back(*($3.value));
                         delete $3.value;
                     };
@@ -189,8 +191,8 @@ Enumerator:         ID {
                         CheckIfIdIsShadowing($1);
                         $$.value = new string($1);
                     };
-Statements:         Statement {}|
-                    Statements Statement {};
+Statements:         Statement |
+                    Statements Statement ;
 Statement:          LBRACE OpenScope Statements RBRACE {
                         CloseCurrentScope();
                     }|
@@ -225,7 +227,7 @@ Statement:          LBRACE OpenScope Statements RBRACE {
                         delete $1.type;
                     }|
                     RETURN SC {
-                        CheckReturnValid("void");
+                        CheckReturnValid("VOID");
                     }|
                     RETURN Exp SC {
                         CheckReturnValid(*($2.type));
@@ -251,12 +253,14 @@ IfHeader:           IF LPAREN Exp RPAREN {
                         vector<string> expected(1, "BOOL");
                         CheckTypesMatch(expected, *($3.type));
                         OpenNewScope();
+						delete $3.type;
                     };
 WhileHeader:        WHILE LPAREN Exp RPAREN {
                         vector<string> expected(1, "BOOL");
                         CheckTypesMatch(expected, *($3.type));
                         FlipLoopStatus();
                         OpenNewScope();
+						delete $3.type;
                     };
 Call:               ID LPAREN ExpList RPAREN {
                         $$.type = new string(checkFunction($1, *($3.types)));
@@ -337,12 +341,14 @@ Exp:                LPAREN Exp RPAREN %prec PARENS {
                         CheckTypesMatch(expected, *($1.type));
                         CheckTypesMatch(expected, *($3.type));
                         $$.type = $1.type;
+						delete $3.type;
                     }|
                     Exp OR Exp {
                         vector<string> expected(1, "BOOL");
                         CheckTypesMatch(expected, *($1.type));
                         CheckTypesMatch(expected, *($3.type));
                         $$.type = $1.type;
+						delete $3.type;
                     }|
                     Exp RELATIONAL Exp {
                         vector<string> expected;
@@ -366,6 +372,8 @@ Exp:                LPAREN Exp RPAREN %prec PARENS {
                     }|
                     LPAREN Type RPAREN Exp %prec CAST {
                         isExplicitCastAllowed(*($2.type), *($4.type));
+						$$.type = $2.type;
+						delete $4.type;
                     };
 
 %%
