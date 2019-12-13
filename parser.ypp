@@ -26,13 +26,16 @@ void yyerror(const char*);
     dummy_t dummy;
     formals_t formals;
     formalList_t formalsList;
-    formalDecl_t formalsDecl;
+    formalDecl_t formalDecl;
     retType_t retType;
     enumeratorList_t enumeratorList;
     funcIdDecl_t funcIdDecl;
     enumIdDecl_t enumIdDecl;
 
 }
+
+%nonassoc <dummy> IFWITHOUTELSE
+%nonassoc <dummy> IFWITHELSE
 
 %token <character> B
 %token <str> ID
@@ -76,7 +79,7 @@ void yyerror(const char*);
 %type <retType> RetType
 %type <formals> Formals
 %type <formalsList> FormalsList
-%type <formalsDecl> FormalsDecl
+%type <formalDecl> FormalDecl
 %type <enumeratorList> EnumeratorList
 %type <dummy> Enumerator
 %type <dummy> Statements
@@ -88,7 +91,7 @@ void yyerror(const char*);
 %type <exp> Exp
 %type <dummy> FuncDeclHeader
 %type <dummy> OpenScope
-%type <dummy> CloseScope
+%type <dummy> CloseScopeAndOpen
 %type <dummy> IfHeader
 %type <dummy> WhileHeader
 %type <funcIdDecl> FuncIdDecl
@@ -100,7 +103,7 @@ Program:            Enums Funcs {
                         CheckMainExists();
                         CloseCurrentScope();
                     };
-Funcs:               |
+Funcs:              {}|
                     FuncDecl Funcs ;
 FuncDecl:           FuncDeclHeader Statements RBRACE {
                         CloseCurrentScope();
@@ -121,10 +124,11 @@ FuncDeclHeader:     FuncIdDecl LPAREN Formals RPAREN LBRACE {
 OpenScope:          {
                         OpenNewScope();
                     };
-CloseScope:         {
+CloseScopeAndOpen:  {
                         CloseCurrentScope();
+						OpenNewScope();
                     };
-Enums:              |
+Enums:              {}|
                     EnumDecl Enums ;
 EnumIdDecl:         ENUM ID {
                         AddEnumSymbolIfNotExists($2);
@@ -233,10 +237,10 @@ Statement:          LBRACE OpenScope Statements RBRACE {
                         CheckReturnValid(*($2.type));
                         delete $2.type;
                     }|
-                    IfHeader Statement {
+                    IfHeader Statement %prec IFWITHOUTELSE{
                         CloseCurrentScope();
                     }|
-                    IfHeader Statement CloseScope ELSE OpenScope Statement {
+                    IfHeader Statement ELSE CloseScopeAndOpen Statement %prec IFWITHELSE{
                         CloseCurrentScope();
                     }|
                     WhileHeader Statement {
