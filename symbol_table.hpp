@@ -55,6 +55,9 @@ public:
                                                                           func_ret_type(to_copy.func_ret_type){};
     FunctionSymbolTableRecord& operator=(const FunctionSymbolTableRecord &to_copy);
     vector<tuple<string,string, bool>> GetFuncArgs() const {return func_arguments;}
+    void SetFuncArgs(vector<tuple<string,string, bool>>& funcArgs) {
+        func_arguments = funcArgs;
+    }
     string GetFuncReturnType() const {return func_ret_type;}
 
 };
@@ -74,6 +77,9 @@ public:
                                                                   enum_values(to_copy.enum_values){};
     EnumSymbolTableRecord& operator=(const EnumSymbolTableRecord &to_copy);
     vector<string> GetEnumValues() const {return enum_values;}
+    void SetEnumValues(vector<string>& enumValues) {
+        enum_values = enumValues;
+    }
     bool DoesValueExists(const string& value);
 
 };

@@ -58,4 +58,13 @@ struct enumerator_t{
     string* value;
 };
 
+struct funcIdDecl_t{
+    string* funcId;
+};
+
+struct enumIdDecl_t{
+    string* enumId;
+};
+
+
 #endif //HW3SOL_SEMANTIC_TYPES_HPP
