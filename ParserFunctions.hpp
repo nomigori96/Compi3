@@ -1,21 +1,18 @@
-//
-// Created by owner on 13/12/2019.
-//
 
 #ifndef HW3_PARSERFUNCTIONNEW_HPP
 #define HW3_PARSERFUNCTIONNEW_HPP
-//
-// Created by owner on 13/12/2019.
-//
+
 
 
 #include <algorithm>
 #include "symbol_table.hpp"
 #include "hw3_output.hpp"
 
-
+using namespace output;
 
 void CheckMainExists();
+
+void OpenNewScope();
 
 void CloseCurrentScope();
 

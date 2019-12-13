@@ -36,6 +36,11 @@ void CheckMainExists()
     }
 }
 
+void OpenNewScope()
+{
+    symbol_table.OpenScope();
+}
+
 void CloseCurrentScope()
 {
     endScope();
