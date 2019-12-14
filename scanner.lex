@@ -47,8 +47,8 @@ comment (\/\/[^\r\n]*[\r|\n|\r\n]?)
 {equality} return EQUALITY;
 {mul} return MUL;
 {additive} return ADDITIVE;
-{letter}({letter}|{digit})* return ID;
-0|[1-9]{digit}* return NUM;
+{letter}({letter}|{digit})* {yylval.strType = (char*)malloc(yyleng + 1); strcpy(yylval.strType, yytext); return ID;}
+0|[1-9]{digit}* {yylval.numeric = atoi(yytext); return NUM;};
 \"([^\n\r\"\\]|\\[rnt"\\])+\" return STRING;
 {comment} ;
 {whitespace} ;

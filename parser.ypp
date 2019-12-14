@@ -15,7 +15,6 @@ void yyerror(const char*);
 %}
 
 %union {
-    char character;
     int numeric;
     char* strType;
     exp_t exp;
@@ -38,38 +37,38 @@ void yyerror(const char*);
 %nonassoc <dummy> IFWITHOUTELSE
 %nonassoc <dummy> IFWITHELSE
 
-%token <character> B
+%token <dummy> B
 %token <strType> ID
-%token <character> LPAREN
-%nonassoc <character> RPAREN
-%token <character> LBRACE
-%token <character> RBRACE
-%token <strType> ENUM
-%token <character> SC
-%token <strType> VOID
-%token <character> COMMA
-%token <strType> RETURN
-%token <strType> BREAK
-%token <strType> IF
-%token <strType> CONTINUE
-%nonassoc <strType> ELSE
-%token <strType> WHILE
-%token <strType> INT
-%token <strType> BYTE
-%token <strType> BOOL
+%token <dummy> LPAREN
+%nonassoc <dummy> RPAREN
+%token <dummy> LBRACE
+%token <dummy> RBRACE
+%token <dummy> ENUM
+%token <dummy> SC
+%token <dummy> VOID
+%token <dummy> COMMA
+%token <dummy> RETURN
+%token <dummy> BREAK
+%token <dummy> IF
+%token <dummy> CONTINUE
+%nonassoc <dummy> ELSE
+%token <dummy> WHILE
+%token <dummy> INT
+%token <dummy> BYTE
+%token <dummy> BOOL
 %token <numeric> NUM
-%token <strType> STRING
-%token <strType> TRUE
-%token <strType> FALSE
-%right <character> ASSIGN
-%left <character> OR
-%left <character> AND
-%left <character> EQUALITY
-%nonassoc <character> RELATIONAL
-%left <character> ADDITIVE
-%left <character> MUL
+%token <dummy> STRING
+%token <dummy> TRUE
+%token <dummy> FALSE
+%right <dummy> ASSIGN
+%left <dummy> OR
+%left <dummy> AND
+%left <dummy> EQUALITY
+%nonassoc <dummy> RELATIONAL
+%left <dummy> ADDITIVE
+%left <dummy> MUL
 %right <dummy> CAST
-%right <strType> NOT
+%right <dummy> NOT
 %left <dummy> PARENS
 
 %type <dummy> Program

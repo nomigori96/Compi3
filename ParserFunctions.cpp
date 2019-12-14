@@ -25,7 +25,7 @@ void CheckMainExists()
                     dynamic_cast<FunctionSymbolTableRecord*>(mainRecord);
             vector<tuple<string,string, bool>> main_record_args = mainFunctionRecord->GetFuncArgs();
             string ret = mainFunctionRecord->GetFuncReturnType();
-            if (main_record_args.empty() && ret == "void"){
+            if (main_record_args.empty() && ret == "VOID"){
                 return;
             }
         }
@@ -182,7 +182,8 @@ void AddVariableSymbolIfNotExists(string& symbol_name,
 }
 
 void CheckIfAssignmentAllowed(string& lType, string& expType){
-    if ((lType == "int" && expType == "byte") || lType == expType){
+    cout << "in CheckIfAssignmentAllowed" << endl;
+    if ((lType == "INT" && expType == "BYTE") || lType == expType){
         return;
     }
     errorMismatch(yylineno);
@@ -269,12 +270,14 @@ bool AreArgsEqual(vector<string> expListTypes, vector<tuple<string, string, bool
     if (expListTypes.size() != fromRecord.size()){
         return false;
     }
-    vector<string>::iterator expListTypeIterator = expListTypes.begin();
-    vector<tuple<string, string, bool>>::iterator fromRecordIterator = fromRecord.begin();
+    auto expListTypeIterator = expListTypes.begin();
+    auto fromRecordIterator = fromRecord.begin();
     while (expListTypeIterator != expListTypes.end()){
         if(*expListTypeIterator != get<0>(*fromRecordIterator)){
             return false;
         }
+        ++expListTypeIterator;
+        ++fromRecordIterator;
     }
     return true;
 }
@@ -306,14 +309,14 @@ void CheckNumValidity(int byteNum){
 }
 
 string DetermineBinopReturnType(string& first, string& second){
-    if(first == "byte" && second == "byte"){
-        return "byte";
+    if(first == "BYTE" && second == "BYTE"){
+        return "BYTE";
     }
-    return "int";
+    return "INT";
 }
 
 void isExplicitCastAllowed(string& castToType, string& castFromType){
-    if (!(castToType == "int" && castFromType.find("enum") == 0)){
+    if (!(castToType == "INT" && castFromType.find("enum") == 0)){
         errorMismatch(yylineno);
         exit(0);
     }
