@@ -182,7 +182,6 @@ void AddVariableSymbolIfNotExists(string& symbol_name,
 }
 
 void CheckIfAssignmentAllowed(string& lType, string& expType){
-    cout << "in CheckIfAssignmentAllowed" << endl;
     if ((lType == "INT" && expType == "BYTE") || lType == expType){
         return;
     }
