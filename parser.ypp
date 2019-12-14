@@ -246,6 +246,7 @@ Statement:          LBRACE OpenScope Statements RBRACE {
                     }|
                     RETURN Exp SC {
                         CheckReturnValid(*($2.type));
+						CheckFuncRetValNotVoid();
                         delete $2.type;
                     }|
                     IfHeader Statement %prec IFWITHOUTELSE{
@@ -255,7 +256,7 @@ Statement:          LBRACE OpenScope Statements RBRACE {
                         CloseCurrentScope();
                     }|
                     WhileHeader Statement {
-                        FlipLoopStatus();
+                        LeaveLoop();
                         CloseCurrentScope();
                     }|
                     BREAK SC {
@@ -273,7 +274,7 @@ IfHeader:           IF LPAREN Exp RPAREN {
 WhileHeader:        WHILE LPAREN Exp RPAREN {
                         vector<string> expected(1, "BOOL");
                         CheckTypesMatch(expected, *($3.type));
-                        FlipLoopStatus();
+                        EnterLoop();
                         OpenNewScope();
 						delete $3.type;
                     };

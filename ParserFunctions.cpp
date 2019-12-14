@@ -1,7 +1,3 @@
-//
-// Created by owner on 13/12/2019.
-//
-
 
 
 #include "ParserFunctions.hpp"
@@ -11,8 +7,9 @@ using namespace output;
 using namespace std;
 
 SymbolTable symbol_table;
-bool is_in_loop = false;
 string curr_function_return_type = "";
+
+stack<bool> while_stack = stack<bool>();
 
 extern int yylineno;
 
@@ -20,7 +17,7 @@ void CheckMainExists()
 {
     if (symbol_table.DoesSymbolExists("main") == SYMBOL){
         SymbolTableRecord* mainRecord = symbol_table.GetSymbolRecordById("main");
-        if (mainRecord->GetType() != "function"){
+        if (mainRecord->GetType() == "function"){
             FunctionSymbolTableRecord* mainFunctionRecord =
                     dynamic_cast<FunctionSymbolTableRecord*>(mainRecord);
             vector<tuple<string,string, bool>> main_record_args = mainFunctionRecord->GetFuncArgs();
@@ -30,10 +27,8 @@ void CheckMainExists()
             }
         }
     }
-    else {
-        errorMainMissing();
-        exit(0);
-    }
+    errorMainMissing();
+    exit(0);
 }
 
 void OpenNewScope()
@@ -122,8 +117,8 @@ void CheckIfIdIsShadowing(string& id){
 }
 
 void CheckIfEnumTypeIsDefined(string& enumTypeName, string& id){
-    if(symbol_table.DoesSymbolExists(id) == SYMBOL &&
-            symbol_table.GetSymbolRecordById(enumTypeName)->GetType() == "enum"){
+    if(symbol_table.DoesSymbolExists(enumTypeName.substr(5)) == SYMBOL &&
+            symbol_table.GetSymbolRecordById(enumTypeName.substr(5))->GetType() == "enum"){
         return;
     }
     errorUndefEnum(yylineno, id);
@@ -186,6 +181,7 @@ void CheckIfAssignmentAllowed(string& lType, string& expType){
         return;
     }
     errorMismatch(yylineno);
+    exit(0);
 }
 
 void CheckIfAssignmentAllowedEnum(string& enumType, string& expEnumType, string& varId){
@@ -193,6 +189,7 @@ void CheckIfAssignmentAllowedEnum(string& enumType, string& expEnumType, string&
         return;
     }
     errorUndefEnumValue(yylineno, varId);
+    exit(0);
 }
 
 string GetExpressionTypeById(string& id){
@@ -236,6 +233,13 @@ void CheckReturnValid(string& givenType){
     CheckIfAssignmentAllowed(curr_function_return_type, givenType);
 }
 
+void CheckFuncRetValNotVoid(){
+    if (curr_function_return_type == "VOID"){
+        errorMismatch(yylineno);
+        exit(0);
+    }
+}
+
 void CheckTypesMatch(vector<string>& expected, string& given){
     for (string &expected_option : expected){
         if (given == expected_option){
@@ -246,19 +250,23 @@ void CheckTypesMatch(vector<string>& expected, string& given){
     exit(0);
 }
 
-void FlipLoopStatus(){
-    is_in_loop = !is_in_loop;
+void EnterLoop(){
+    while_stack.push(true);
+}
+
+void LeaveLoop(){
+    while_stack.pop();
 }
 
 void CheckIfBreakInLoop(){
-    if (!is_in_loop){
+    if (while_stack.empty()){
         errorUnexpectedBreak(yylineno);
         exit(0);
     }
 }
 
 void CheckIfContinueInLoop(){
-    if (!is_in_loop){
+    if (while_stack.empty()){
         errorUnexpectedContinue(yylineno);
         exit(0);
     }
@@ -272,7 +280,8 @@ bool AreArgsEqual(vector<string> expListTypes, vector<tuple<string, string, bool
     auto expListTypeIterator = expListTypes.begin();
     auto fromRecordIterator = fromRecord.begin();
     while (expListTypeIterator != expListTypes.end()){
-        if(*expListTypeIterator != get<0>(*fromRecordIterator)){
+        if(*expListTypeIterator != get<0>(*fromRecordIterator) &&
+                !(*expListTypeIterator == "BYTE" && get<0>(*fromRecordIterator) == "INT")){
             return false;
         }
         ++expListTypeIterator;
@@ -320,5 +329,4 @@ void isExplicitCastAllowed(string& castToType, string& castFromType){
         exit(0);
     }
 }
-
 

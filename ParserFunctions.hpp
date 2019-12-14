@@ -56,9 +56,13 @@ void HandleAssignmentForExistingVar(string& id, string& expType);
 
 void CheckReturnValid(string& givenType);
 
+void CheckFuncRetValNotVoid();
+
 void CheckTypesMatch(vector<string>& expected, string& given);
 
-void FlipLoopStatus();
+void EnterLoop();
+
+void LeaveLoop();
 
 void CheckIfBreakInLoop();
 
