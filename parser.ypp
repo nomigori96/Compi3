@@ -99,10 +99,7 @@ void yyerror(const char*);
 
 %%
 
-Program:            Enums Funcs {
-                        CheckMainExists();
-                        CloseCurrentScope();
-                    };
+Program:            Enums Funcs {};
 Funcs:              {}|
                     FuncDecl Funcs ;
 FuncDecl:           FuncDeclHeader Statements RBRACE {
@@ -403,5 +400,9 @@ void yyerror(const char*){
 }
 
 int main(){
-    return yyparse();
+    yyparse();
+	CheckMainExists();
+	//closing global scope
+    CloseCurrentScope();
+	return 0;
 }

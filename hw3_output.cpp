@@ -73,7 +73,7 @@ void output::errorUndefEnum(int lineno, const string& id) {
 }
 
 void output::errorUndefEnumValue(int lineno, const string& id) {
-    cout << "line " << lineno << ":" << " enum value " << id << " is not defined" << endl;
+    cout << "line " << lineno << ":" << " assignment of undefined value to " << id << endl;
 }
 
 void output::errorMismatch(int lineno){
