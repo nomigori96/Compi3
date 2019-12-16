@@ -121,7 +121,7 @@ void CheckIfEnumTypeIsDefined(string& enumTypeName){
     if(symbol_table.GetSymbolRecordById(enumTypeName.substr(5))->GetType() == "enum"){
         return;
     }
-    errorUndefEnum(yylineno, enumTypeName.substr(5));
+    errorUndefEnum(yylineno, enumTypeName);
     exit(0);
 }
 
