@@ -130,11 +130,11 @@ SymbolTable::SymbolTable()
     offsets_stack = new stack<int>();
     offsets_stack->push(0);
     vector<tuple<string,string, bool>> print_arguments;
-    print_arguments.push_back(tuple<string, string, bool>("string", "", false));
-    SymbolTableRecord* print_record = new FunctionSymbolTableRecord("print", 0, print_arguments, "void");
+    print_arguments.push_back(tuple<string, string, bool>("STRING", "", false));
+    SymbolTableRecord* print_record = new FunctionSymbolTableRecord("print", 0, print_arguments, "VOID");
     vector<tuple<string,string, bool>> printi_arguments;
-    printi_arguments.push_back(tuple<string, string, bool>("int", "", false));
-    SymbolTableRecord* printi_record = new FunctionSymbolTableRecord("printi", 0, printi_arguments, "void");
+    printi_arguments.push_back(tuple<string, string, bool>("INT", "", false));
+    SymbolTableRecord* printi_record = new FunctionSymbolTableRecord("printi", 0, printi_arguments, "VOID");
     vector<SymbolTableRecord*> scope = vector<SymbolTableRecord*>();
     scope.push_back(print_record);
     scope.push_back(printi_record);

@@ -15,9 +15,8 @@ void yyerror(const char*);
 %}
 
 %union {
-    char character;
     int numeric;
-    string str;
+    char* strType;
     exp_t exp;
     type_t type;
     enumType_t enumType;
@@ -26,46 +25,50 @@ void yyerror(const char*);
     dummy_t dummy;
     formals_t formals;
     formalList_t formalsList;
-    formalDecl_t formalsDecl;
+    formalDecl_t formalDecl;
     retType_t retType;
     enumeratorList_t enumeratorList;
+	enumerator_t enumerator;
     funcIdDecl_t funcIdDecl;
     enumIdDecl_t enumIdDecl;
 
-}
+};
 
-%token <character> B
-%token <str> ID
-%token <character> LPAREN
-%nonassoc <character> RPAREN
-%token <character> LBRACE
-%token <character> RBRACE
-%token <str> ENUM
-%token <character> SC
-%token <str> VOID
-%token <character> COMMA
-%token <str> RETURN
-%token <str> BREAK
-%token <str> IF
-%token <str> CONTINUE
-%nonassoc <str> ELSE
-%token <str> WHILE
-%token <str> INT
-%token <str> BYTE
-%token <str> BOOL
+%nonassoc <dummy> IFWITHOUTELSE
+%nonassoc <dummy> IFWITHELSE
+
+%token <dummy> B
+%token <strType> ID
+%token <dummy> LPAREN
+%nonassoc <dummy> RPAREN
+%token <dummy> LBRACE
+%token <dummy> RBRACE
+%token <dummy> ENUM
+%token <dummy> SC
+%token <dummy> VOID
+%token <dummy> COMMA
+%token <dummy> RETURN
+%token <dummy> BREAK
+%token <dummy> IF
+%token <dummy> CONTINUE
+%nonassoc <dummy> ELSE
+%token <dummy> WHILE
+%token <dummy> INT
+%token <dummy> BYTE
+%token <dummy> BOOL
 %token <numeric> NUM
-%token <str> STRING
-%token <str> TRUE
-%token <str> FALSE
-%right <character> ASSIGN
-%left <character> OR
-%left <character> AND
-%left <character> EQUALITY
-%nonassoc <character> RELATIONAL
-%left <character> ADDITIVE
-%left <character> MUL
+%token <dummy> STRING
+%token <dummy> TRUE
+%token <dummy> FALSE
+%right <dummy> ASSIGN
+%left <dummy> OR
+%left <dummy> AND
+%left <dummy> EQUALITY
+%nonassoc <dummy> RELATIONAL
+%left <dummy> ADDITIVE
+%left <dummy> MUL
 %right <dummy> CAST
-%right <str> NOT
+%right <dummy> NOT
 %left <dummy> PARENS
 
 %type <dummy> Program
@@ -76,9 +79,9 @@ void yyerror(const char*);
 %type <retType> RetType
 %type <formals> Formals
 %type <formalsList> FormalsList
-%type <formalsDecl> FormalsDecl
+%type <formalDecl> FormalDecl
 %type <enumeratorList> EnumeratorList
-%type <dummy> Enumerator
+%type <enumerator> Enumerator
 %type <dummy> Statements
 %type <dummy> Statement
 %type <call> Call
@@ -88,7 +91,7 @@ void yyerror(const char*);
 %type <exp> Exp
 %type <dummy> FuncDeclHeader
 %type <dummy> OpenScope
-%type <dummy> CloseScope
+%type <dummy> CloseScopeAndOpen
 %type <dummy> IfHeader
 %type <dummy> WhileHeader
 %type <funcIdDecl> FuncIdDecl
@@ -96,45 +99,47 @@ void yyerror(const char*);
 
 %%
 
-Program:            Enums Funcs {
-                        CheckMainExists();
-                        CloseCurrentScope();
-                    };
-Funcs:               |
+Program:            Enums Funcs {};
+Funcs:              {}|
                     FuncDecl Funcs ;
 FuncDecl:           FuncDeclHeader Statements RBRACE {
                         CloseCurrentScope();
                     };
 FuncIdDecl:         RetType ID {
-                        AddFunctionSymbolIfNotExists($2, *($1.type));
+						string id($2);
+                        AddFunctionSymbolIfNotExists(id, *($1.type));
                         UpdateCurrFunctionRetType(*($1.type));
                         $$.funcId = new string($2);
+						delete $1.type;
                     };
 FuncDeclHeader:     FuncIdDecl LPAREN Formals RPAREN LBRACE {
-                        UpdateFunctionSymbolArgs(*($3.args), *($1.funcId))
+                        UpdateFunctionSymbolArgs(*($3.args), *($1.funcId));
                         OpenNewScope();
-                        AddFuncArgsToSymbolTable(*($4.args));
-                        delete $4.args;
-                        delete $1.type;
+                        AddFuncArgsToSymbolTable(*($3.args));
+						delete $3.args;
+                        delete $1.funcId;
                     };
 OpenScope:          {
                         OpenNewScope();
                     };
-CloseScope:         {
+CloseScopeAndOpen:  {
                         CloseCurrentScope();
+						OpenNewScope();
                     };
-Enums:              |
+Enums:              {}|
                     EnumDecl Enums ;
 EnumIdDecl:         ENUM ID {
-                        AddEnumSymbolIfNotExists($2);
+						string id($2);
+                        AddEnumSymbolIfNotExists(id);
                         $$.enumId = new string($2);
                     };
 EnumDecl:           EnumIdDecl LBRACE EnumeratorList RBRACE SC {
-                        UpdateEnumSymbolValues(*($3.values), $1.enumId);
-                        delete $4.values;
+                        UpdateEnumSymbolValues(*($3.values), *($1.enumId));
+                        delete $3.values;
+						delete $1.enumId;
                     };
 RetType:            Type {$$.type = $1.type;}|
-                    VOID {$$.type = new string("void");};
+                    VOID {$$.type = new string("VOID");};
 Formals:            {
                         $$.args = new vector<tuple<string, string, bool>>();
                     }|
@@ -143,32 +148,34 @@ Formals:            {
                     };
 FormalsList:        FormalDecl {
                         $$.args = new vector<tuple<string,string, bool>>();
-                        tuple<string,string, bool>* argToAdd(*($1.type),
-                                                             *($1.argName),
-                                                             $1.is_enum_type);
-                        $$.args.push_back(argToAdd);
+                        tuple<string,string, bool> argToAdd(*($1.type),
+                                                            *($1.argName),
+                                                            $1.isEnumType);
+                        $$.args->push_back(argToAdd);
                         delete $1.type;
                         delete $1.argName;
                     }|
                     FormalDecl COMMA FormalsList {
                         $$.args = $3.args;
                         CheckNoDuplicatesFormalList(*($3.args), *($1.argName));
-                        tuple<string,string, bool>* argToAdd(*($1.type),
-                                                             *($1.argName),
-                                                             $1.is_enum_type);
-                        $$.args.insert(*($$.args).begin(), argToAdd);
+                        tuple<string,string, bool> argToAdd(*($1.type),
+                                                            *($1.argName),
+                                                            $1.isEnumType);
+                        $$.args->insert($$.args->begin(), argToAdd);
                         delete $1.type;
                         delete $1.argName;
                     };
 FormalDecl:         Type ID {
-                        CheckIfIdIsShadowing($2);
+						string id($2);
+                        CheckIfIdIsShadowing(id);
                         $$.type = $1.type;
                         $$.argName = new string($2);
                         $$.isEnumType = false;
                     }|
                     EnumType ID {
-                        CheckIfIdIsShadowing($2);
-                        CheckIfEnumTypeIsDefined(*($1.typeName), $2);
+						string id($2);
+                        CheckIfIdIsShadowing(id);
+                        CheckIfEnumTypeIsDefined(*($1.typeName), id);
                         $$.type = new string(*($1.typeName));
                         $$.argName = new string($2);
                         $$.isEnumType = true;
@@ -181,64 +188,72 @@ EnumeratorList:     Enumerator {
                     }|
                     EnumeratorList COMMA Enumerator {
                         $$.values = $1.values;
-                        CheckNoDuplicatesEnumList($$.values, *($3.value));
+                        CheckNoDuplicatesEnumList(*($1.values), *($3.value));
                         $$.values->push_back(*($3.value));
                         delete $3.value;
                     };
 Enumerator:         ID {
-                        CheckIfIdIsShadowing($1);
+						string id($1);
+                        CheckIfIdIsShadowing(id);
                         $$.value = new string($1);
                     };
-Statements:         Statement {}|
-                    Statements Statement {};
+Statements:         Statement |
+                    Statements Statement ;
 Statement:          LBRACE OpenScope Statements RBRACE {
                         CloseCurrentScope();
                     }|
                     Type ID SC {
-                        AddVariableSymbolIfNotExists($2, *($1.type), false);
+						string id($2);
+                        AddVariableSymbolIfNotExists(id, *($1.type), false);
                         delete $1.type;
                     }|
                     EnumType ID SC {
-                        CheckIfEnumTypeIsDefined(*($1.typeName), $2);
-                        AddVariableSymbolIfNotExists($2, *($1.typeName), true);
+						string id($2);
+                        CheckIfEnumTypeIsDefined(*($1.typeName), id);
+                        AddVariableSymbolIfNotExists(id, *($1.typeName), true);
                         delete $1.typeName;
                     }|
                     EnumDecl |
                     Type ID ASSIGN Exp SC {
-                        AddVariableSymbolIfNotExists($2, *($1.type), false);
+						string id($2);
+                        AddVariableSymbolIfNotExists(id, *($1.type), false);
                         CheckIfAssignmentAllowed(*($1.type), *($4.type));
                         delete $1.type;
                         delete $4.type;
                     }|
                     EnumType ID ASSIGN Exp SC {
-                        CheckIfEnumTypeIsDefined(*($1.typeName), $2);
-                        CheckIfAssignmentAllowedEnum(*($1.typeName), *($4.type), $2);
-                        AddVariableSymbolIfNotExists($2, *($1.typeName), false);
+						string id($2);
+                        CheckIfEnumTypeIsDefined(*($1.typeName), id);
+                        CheckIfAssignmentAllowedEnum(*($1.typeName), *($4.type), id);
+                        AddVariableSymbolIfNotExists(id, *($1.typeName), false);
                         delete $1.typeName;
                         delete $4.type;
                     }|
                     ID ASSIGN Exp SC {
-                        HandleAssignmentForExistingVar($1, *($3.type));
+						string id($1);
+                        HandleAssignmentForExistingVar(id, *($3.type));
                         delete $3.type;
                     }|
                     Call SC {
                         delete $1.type;
                     }|
                     RETURN SC {
-                        CheckReturnValid("void");
+						string void_str("VOID");
+                        CheckReturnValid(void_str);
                     }|
                     RETURN Exp SC {
                         CheckReturnValid(*($2.type));
+						CheckFuncRetValNotVoid();
                         delete $2.type;
                     }|
-                    IfHeader Statement {
+                    IfHeader Statement %prec IFWITHOUTELSE{
                         CloseCurrentScope();
                     }|
-                    IfHeader Statement CloseScope ELSE OpenScope Statement {
+                    IfHeader Statement ELSE CloseScopeAndOpen Statement %prec IFWITHELSE{
                         CloseCurrentScope();
                     }|
                     WhileHeader Statement {
-                        FlipLoopStatus();
+                        LeaveLoop();
                         CloseCurrentScope();
                     }|
                     BREAK SC {
@@ -251,19 +266,23 @@ IfHeader:           IF LPAREN Exp RPAREN {
                         vector<string> expected(1, "BOOL");
                         CheckTypesMatch(expected, *($3.type));
                         OpenNewScope();
+						delete $3.type;
                     };
 WhileHeader:        WHILE LPAREN Exp RPAREN {
                         vector<string> expected(1, "BOOL");
                         CheckTypesMatch(expected, *($3.type));
-                        FlipLoopStatus();
+                        EnterLoop();
                         OpenNewScope();
+						delete $3.type;
                     };
 Call:               ID LPAREN ExpList RPAREN {
-                        $$.type = new string(checkFunction($1, *($3.types)));
+						string id($1);
+                        $$.type = new string(CheckFunction(id, *($3.types)));
                         delete $3.types;
                     }|
                     ID LPAREN RPAREN {
-                        $$.type = new string(checkFunction($1, vector<string>()));
+						string id($1);
+                        $$.type = new string(CheckFunction(id, vector<string>()));
                     };
 ExpList:            Exp {
                         $$.types = new vector<string>();
@@ -306,7 +325,8 @@ Exp:                LPAREN Exp RPAREN %prec PARENS {
                         delete $3.type;
                     }|
                     ID {
-                        $$.type = new string(GetExpressionTypeById($1));
+						string id($1);
+                        $$.type = new string(GetExpressionTypeById(id));
                     }|
                     Call {
                         $$.type = $1.type;
@@ -337,12 +357,14 @@ Exp:                LPAREN Exp RPAREN %prec PARENS {
                         CheckTypesMatch(expected, *($1.type));
                         CheckTypesMatch(expected, *($3.type));
                         $$.type = $1.type;
+						delete $3.type;
                     }|
                     Exp OR Exp {
                         vector<string> expected(1, "BOOL");
                         CheckTypesMatch(expected, *($1.type));
                         CheckTypesMatch(expected, *($3.type));
                         $$.type = $1.type;
+						delete $3.type;
                     }|
                     Exp RELATIONAL Exp {
                         vector<string> expected;
@@ -366,6 +388,8 @@ Exp:                LPAREN Exp RPAREN %prec PARENS {
                     }|
                     LPAREN Type RPAREN Exp %prec CAST {
                         isExplicitCastAllowed(*($2.type), *($4.type));
+						$$.type = $2.type;
+						delete $4.type;
                     };
 
 %%
@@ -376,5 +400,9 @@ void yyerror(const char*){
 }
 
 int main(){
-    return yyparse();
+    yyparse();
+	CheckMainExists();
+	//closing global scope
+    CloseCurrentScope();
+	return 0;
 }

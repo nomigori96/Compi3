@@ -17,7 +17,6 @@ struct type_t{
 };
 
 struct enumType_t{
-    vector<string>* values;
     string* typeName;
 };
 
