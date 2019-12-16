@@ -117,12 +117,11 @@ void CheckIfIdIsShadowing(string& id){
     }
 }
 
-void CheckIfEnumTypeIsDefined(string& enumTypeName, string& id){
-    if(symbol_table.DoesSymbolExists(enumTypeName.substr(5)) == SYMBOL &&
-            symbol_table.GetSymbolRecordById(enumTypeName.substr(5))->GetType() == "enum"){
+void CheckIfEnumTypeIsDefined(string& enumTypeName){
+    if(symbol_table.GetSymbolRecordById(enumTypeName.substr(5))->GetType() == "enum"){
         return;
     }
-    errorUndefEnum(yylineno, id);
+    errorUndefEnum(yylineno, enumTypeName.substr(5));
     exit(0);
 }
 

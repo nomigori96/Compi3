@@ -31,7 +31,7 @@ void UpdateFunctionSymbolArgs(vector<tuple<string,string,bool>>& args, string fu
 
 void CheckIfIdIsShadowing(string& id);
 
-void CheckIfEnumTypeIsDefined(string& enumTypeName, string& id);
+void CheckIfEnumTypeIsDefined(string& enumTypeName);
 
 void AddEnumSymbolIfNotExists(
         const string& symbol_name);
