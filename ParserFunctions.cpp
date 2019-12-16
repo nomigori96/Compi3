@@ -1,5 +1,6 @@
 
 
+#include <algorithm>
 #include "ParserFunctions.hpp"
 
 
@@ -116,12 +117,12 @@ void CheckIfIdIsShadowing(string& id){
     }
 }
 
-void CheckIfEnumTypeIsDefined(string& enumTypeName, string& id){
-    if(symbol_table.DoesSymbolExists(enumTypeName.substr(5)) == SYMBOL &&
-            symbol_table.GetSymbolRecordById(enumTypeName.substr(5))->GetType() == "enum"){
+void CheckIfEnumTypeIsDefined(string& enumTypeName){
+    if(symbol_table.DoesSymbolExists(enumTypeName) == SYMBOL &&
+            symbol_table.GetSymbolRecordById(enumTypeName)->GetType() == "enum"){
         return;
     }
-    errorUndefEnum(yylineno, id);
+    errorUndefEnum(yylineno, enumTypeName);
     exit(0);
 }
 

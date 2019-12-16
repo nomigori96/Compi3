@@ -175,7 +175,6 @@ FormalDecl:         Type ID {
                     EnumType ID {
 						string id($2);
                         CheckIfIdIsShadowing(id);
-                        CheckIfEnumTypeIsDefined(*($1.typeName), id);
                         $$.type = new string(*($1.typeName));
                         $$.argName = new string($2);
                         $$.isEnumType = true;
@@ -209,7 +208,6 @@ Statement:          LBRACE OpenScope Statements RBRACE {
                     }|
                     EnumType ID SC {
 						string id($2);
-                        CheckIfEnumTypeIsDefined(*($1.typeName), id);
                         AddVariableSymbolIfNotExists(id, *($1.typeName), true);
                         delete $1.typeName;
                     }|
@@ -223,7 +221,6 @@ Statement:          LBRACE OpenScope Statements RBRACE {
                     }|
                     EnumType ID ASSIGN Exp SC {
 						string id($2);
-                        CheckIfEnumTypeIsDefined(*($1.typeName), id);
                         CheckIfAssignmentAllowedEnum(*($1.typeName), *($4.type), id);
                         AddVariableSymbolIfNotExists(id, *($1.typeName), false);
                         delete $1.typeName;
@@ -298,6 +295,8 @@ Type:               INT {$$.type = new string("INT");}|
                     BYTE {$$.type = new string("BYTE");}|
                     BOOL {$$.type = new string("BOOL");};
 EnumType:           ENUM ID {
+                        string enumName($2);
+                        CheckIfEnumTypeIsDefined(enumName);
                         string fullType = string("enum ") + string($2);
                         $$.typeName = new string(fullType);
                     };
