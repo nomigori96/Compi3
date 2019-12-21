@@ -128,14 +128,14 @@ CloseScopeAndOpen:  {
                     };
 Enums:              {}|
                     EnumDecl Enums ;
-EnumIdDecl:         ENUM ID {
+EnumIdDecl:         ENUM ID LBRACE {
 						string id($2);
                         AddEnumSymbolIfNotExists(id);
                         $$.enumId = new string($2);
                     };
-EnumDecl:           EnumIdDecl LBRACE EnumeratorList RBRACE SC {
-                        UpdateEnumSymbolValues(*($3.values), *($1.enumId));
-                        delete $3.values;
+EnumDecl:           EnumIdDecl EnumeratorList RBRACE SC {
+                        UpdateEnumSymbolValues(*($2.values), *($1.enumId));
+                        delete $2.values;
 						delete $1.enumId;
                     };
 RetType:            Type {$$.type = $1.type;}|
